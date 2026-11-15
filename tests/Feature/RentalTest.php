@@ -159,5 +159,27 @@ class RentalTest extends TestCase
         $this->assertDatabaseHas('customers', ['id' => 'PLG-9999']);
         $this->assertDatabaseHas('cars', ['id' => 'ARM-9999']);
     }
+
+    public function test_deploy_unauthorized_without_token(): void
+    {
+        $response = $this->get('/deploy');
+        $response->assertStatus(403);
+        $response->assertSee('Akses Ditolak');
+    }
+
+    public function test_deploy_authorized_with_token(): void
+    {
+        $response = $this->get('/deploy?token=alfaprima-deploy');
+        $response->assertStatus(200);
+        $response->assertSee('ALFA');
+        $response->assertSee('DEPLOY HELPER');
+    }
+
+    public function test_deploy_run_migrate(): void
+    {
+        $response = $this->get('/deploy/migrate?token=alfaprima-deploy');
+        $response->assertStatus(200);
+        $response->assertSee('Output Terminal Konsol');
+    }
 }
 

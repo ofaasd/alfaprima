@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\RentalController;
+use App\Http\Controllers\DeployController;
 use Illuminate\Support\Facades\Route;
 
 // Main App View
@@ -51,3 +52,7 @@ Route::get('/api/backup', [RentalController::class, 'backupJson']);
 Route::post('/api/restore', [RentalController::class, 'restoreJson']);
 Route::get('/api/export-csv', [RentalController::class, 'exportCsv']);
 Route::post('/api/clear-all', [RentalController::class, 'clearAll']);
+
+// cPanel Deployment & Database Maintenance (No Terminal Needed)
+Route::get('/deploy', [DeployController::class, 'index'])->name('deploy.index');
+Route::get('/deploy/{action}', [DeployController::class, 'runCommand'])->name('deploy.run');
