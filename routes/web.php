@@ -34,12 +34,17 @@ Route::delete('/api/bookings/{id}', [RentalController::class, 'deleteBooking']);
 
 Route::post('/api/payments', [RentalController::class, 'savePayment']);
 Route::put('/api/payments/{id}', [RentalController::class, 'updatePayment']);
+Route::delete('/api/payments/{id}', [RentalController::class, 'deletePayment']);
 
 Route::post('/api/expenses', [RentalController::class, 'saveExpense']);
 Route::delete('/api/expenses/{id}', [RentalController::class, 'deleteExpense']);
 
 Route::post('/api/partner-payments', [RentalController::class, 'savePartnerPayment']);
+Route::post('/api/driver-payments', [RentalController::class, 'saveDriverPayment']);
+Route::post('/api/other-charges', [RentalController::class, 'saveOtherCharge']);
+Route::post('/api/accounts', [RentalController::class, 'saveAccount']);
 Route::post('/api/journals', [RentalController::class, 'saveJournal']);
+Route::post('/api/save-all', [RentalController::class, 'saveAll']);
 
 // Utilities: Backup, Restore, Export, Clear All
 Route::get('/api/backup', [RentalController::class, 'backupJson']);

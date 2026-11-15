@@ -22,11 +22,26 @@ class PartnerPayment extends Model
         'note',
     ];
 
+    protected $appends = [
+        'bookingId',
+        'partnerId',
+    ];
+
     protected function casts(): array
     {
         return [
             'amount' => 'float',
         ];
+    }
+
+    public function getBookingIdAttribute()
+    {
+        return $this->attributes['booking_id'] ?? null;
+    }
+
+    public function getPartnerIdAttribute()
+    {
+        return $this->attributes['partner_id'] ?? null;
     }
 
     public function booking()
@@ -39,4 +54,3 @@ class PartnerPayment extends Model
         return $this->belongsTo(Partner::class, 'partner_id');
     }
 }
-

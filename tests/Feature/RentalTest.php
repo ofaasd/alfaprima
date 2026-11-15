@@ -63,6 +63,9 @@ class RentalTest extends TestCase
                 'expenses',
                 'partnerPayments',
                 'journals',
+                'accounts',
+                'driverPayments',
+                'otherCharges',
             ]
         ]);
     }
@@ -84,6 +87,77 @@ class RentalTest extends TestCase
             'nama' => 'Joko Widodo',
             'status' => 'Aktif',
         ]);
+    }
+
+    public function test_driver_payment_creation(): void
+    {
+        $user = User::where('username', 'alfaprima')->first();
+        $response = $this->actingAs($user)->postJson('/api/driver-payments', [
+            'assignment_key' => 'BKG-0001::0',
+            'booking_id' => 'BKG-0001',
+            'unit_index' => 0,
+            'driver_id' => 'DRV-0001',
+            'driver_name' => 'Slamet Riyadi',
+            'date' => '2026-11-13',
+            'amount' => 300000,
+            'note' => 'Uang jalan tahap 1',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('driver_payments', [
+            'booking_id' => 'BKG-0001',
+            'amount' => 300000,
+        ]);
+    }
+
+    public function test_account_creation(): void
+    {
+        $user = User::where('username', 'alfaprima')->first();
+        $response = $this->actingAs($user)->postJson('/api/accounts', [
+            'code' => '1102',
+            'name' => 'Kas Kecil',
+            'group' => 'Aset',
+            'normal' => 'Debit',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('accounts', [
+            'code' => '1102',
+            'name' => 'Kas Kecil',
+        ]);
+    }
+
+    public function test_save_all_syncs_database(): void
+    {
+        $user = User::where('username', 'alfaprima')->first();
+        $response = $this->actingAs($user)->postJson('/api/save-all', [
+            'customers' => [
+                [
+                    'id' => 'PLG-9999',
+                    'nama' => 'Pelanggan Baru',
+                    'alamat' => 'Semarang',
+                    'wa' => '0899999999',
+                    'status' => 'Aktif'
+                ]
+            ],
+            'cars' => [
+                [
+                    'id' => 'ARM-9999',
+                    'merk' => 'Honda',
+                    'jenis' => 'Civic RS',
+                    'plat' => 'H 9999 ZZ',
+                    'trans' => 'Matic',
+                    'status' => 'Tersedia',
+                    'ownership' => 'sendiri',
+                    'vehicleClass' => 'Premium'
+                ]
+            ]
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['ok' => true]);
+        $this->assertDatabaseHas('customers', ['id' => 'PLG-9999']);
+        $this->assertDatabaseHas('cars', ['id' => 'ARM-9999']);
     }
 }
 

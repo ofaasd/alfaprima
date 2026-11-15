@@ -32,6 +32,24 @@ class Booking extends Model
         'lodging_cost',
         'total',
         'status',
+        'units_json',
+        'created',
+    ];
+
+    protected $appends = [
+        'customerId',
+        'carId',
+        'partnerRate',
+        'driverId',
+        'driverName',
+        'driverFee',
+        'driverFeePerDay',
+        'tollCost',
+        'fuelCost',
+        'mealCost',
+        'lodgingCost',
+        'unitsJson',
+        'units',
     ];
 
     protected function casts(): array
@@ -48,6 +66,77 @@ class Booking extends Model
             'lodging_cost' => 'float',
             'total' => 'float',
         ];
+    }
+
+    public function getCustomerIdAttribute()
+    {
+        return $this->attributes['customer_id'] ?? null;
+    }
+
+    public function getCarIdAttribute()
+    {
+        return $this->attributes['car_id'] ?? null;
+    }
+
+    public function getPartnerRateAttribute()
+    {
+        return $this->attributes['partner_rate'] ?? 0;
+    }
+
+    public function getDriverIdAttribute()
+    {
+        return $this->attributes['driver_id'] ?? null;
+    }
+
+    public function getDriverNameAttribute()
+    {
+        return $this->attributes['driver_name'] ?? null;
+    }
+
+    public function getDriverFeeAttribute()
+    {
+        return $this->attributes['driver_fee'] ?? 0;
+    }
+
+    public function getDriverFeePerDayAttribute()
+    {
+        return $this->attributes['driver_fee_per_day'] ?? 0;
+    }
+
+    public function getTollCostAttribute()
+    {
+        return $this->attributes['toll_cost'] ?? 0;
+    }
+
+    public function getFuelCostAttribute()
+    {
+        return $this->attributes['fuel_cost'] ?? 0;
+    }
+
+    public function getMealCostAttribute()
+    {
+        return $this->attributes['meal_cost'] ?? 0;
+    }
+
+    public function getLodgingCostAttribute()
+    {
+        return $this->attributes['lodging_cost'] ?? 0;
+    }
+
+    public function getUnitsJsonAttribute()
+    {
+        return $this->attributes['units_json'] ?? null;
+    }
+
+    public function getUnitsAttribute()
+    {
+        if (!empty($this->attributes['units_json'])) {
+            $decoded = json_decode($this->attributes['units_json'], true);
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+        }
+        return [];
     }
 
     public function customer()
@@ -74,5 +163,9 @@ class Booking extends Model
     {
         return $this->hasMany(PartnerPayment::class, 'booking_id');
     }
-}
 
+    public function driverPayments()
+    {
+        return $this->hasMany(DriverPayment::class, 'booking_id');
+    }
+}

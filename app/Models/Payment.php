@@ -14,11 +14,16 @@ class Payment extends Model
 
     protected $fillable = [
         'id',
-        'booking_id',
         'customer_id',
+        'booking_id',
         'amount',
         'status',
         'date',
+    ];
+
+    protected $appends = [
+        'customerId',
+        'bookingId',
     ];
 
     protected function casts(): array
@@ -26,6 +31,16 @@ class Payment extends Model
         return [
             'amount' => 'float',
         ];
+    }
+
+    public function getCustomerIdAttribute()
+    {
+        return $this->attributes['customer_id'] ?? null;
+    }
+
+    public function getBookingIdAttribute()
+    {
+        return $this->attributes['booking_id'] ?? null;
     }
 
     public function booking()
@@ -38,4 +53,3 @@ class Payment extends Model
         return $this->belongsTo(Customer::class, 'customer_id');
     }
 }
-

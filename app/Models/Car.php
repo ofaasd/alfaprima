@@ -22,6 +22,13 @@ class Car extends Model
         'ownership',
         'partner_id',
         'partner_rate',
+        'vehicle_class',
+    ];
+
+    protected $appends = [
+        'vehicleClass',
+        'partnerId',
+        'partnerRate',
     ];
 
     protected function casts(): array
@@ -29,6 +36,21 @@ class Car extends Model
         return [
             'partner_rate' => 'float',
         ];
+    }
+
+    public function getVehicleClassAttribute()
+    {
+        return $this->attributes['vehicle_class'] ?? 'City Car';
+    }
+
+    public function getPartnerIdAttribute()
+    {
+        return $this->attributes['partner_id'] ?? null;
+    }
+
+    public function getPartnerRateAttribute()
+    {
+        return $this->attributes['partner_rate'] ?? 0;
     }
 
     public function partner()
@@ -46,4 +68,3 @@ class Car extends Model
         return $this->hasMany(Expense::class, 'car_id');
     }
 }
-

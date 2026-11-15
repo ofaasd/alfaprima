@@ -23,7 +23,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 2. Partners Table (Mitra Pemilik Mobil)
+        // 2. Partners Table (Mitra)
         Schema::create('partners', function (Blueprint $table) {
             $table->string('id')->primary(); // e.g. MTR-0001
             $table->string('name');
@@ -46,12 +46,13 @@ return new class extends Migration
             $table->string('ownership')->default('sendiri'); // sendiri, mitra
             $table->string('partner_id')->nullable();
             $table->decimal('partner_rate', 15, 2)->default(0);
+            $table->string('vehicle_class')->default('City Car')->nullable(); // Klasifikasi Armada
             $table->timestamps();
 
             $table->foreign('partner_id')->references('id')->on('partners')->onDelete('set null');
         });
 
-        // 4. Drivers Table (Driver / Pengemudi)
+        // 4. Drivers Table (Driver)
         Schema::create('drivers', function (Blueprint $table) {
             $table->string('id')->primary(); // e.g. DRV-0001
             $table->string('name');
@@ -62,11 +63,11 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 5. Bookings Table (Penyewaan)
+        // 5. Bookings Table (Booking)
         Schema::create('bookings', function (Blueprint $table) {
             $table->string('id')->primary(); // e.g. BKG-0001
             $table->string('customer_id');
-            $table->string('car_id');
+            $table->string('car_id')->nullable();
             $table->date('start');
             $table->date('end');
             $table->integer('days')->default(1);
@@ -83,41 +84,43 @@ return new class extends Migration
             $table->decimal('lodging_cost', 15, 2)->default(0);
             $table->decimal('total', 15, 2)->default(0);
             $table->string('status')->default('Belum Bayar'); // Belum Bayar, DP, Lunas
+            $table->longText('units_json')->nullable(); // Rincian Unit Booking JSON
+            $table->string('created')->nullable(); // Tanggal Dibuat
             $table->timestamps();
 
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('restrict');
-            $table->foreign('car_id')->references('id')->on('cars')->onDelete('restrict');
+            $table->foreign('car_id')->references('id')->on('cars')->onDelete('set null');
             $table->foreign('driver_id')->references('id')->on('drivers')->onDelete('set null');
         });
 
-        // 6. Payments Table (Pencatatan Pembayaran)
+        // 6. Payments Table (Pembayaran)
         Schema::create('payments', function (Blueprint $table) {
             $table->string('id')->primary(); // e.g. BYR-0001
-            $table->string('booking_id');
             $table->string('customer_id');
+            $table->string('booking_id'); // Can be BKG-xxxx or BLY:BLY-xxxx
             $table->decimal('amount', 15, 2);
-            $table->string('status')->default('Lunas'); // DP, Lunas
+            $table->string('status')->default('Lunas'); // DP, Lunas, Kurang Bayar
             $table->date('date');
             $table->timestamps();
 
-            $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('cascade');
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');
         });
 
-        // 7. Expenses Table (Data Pengeluaran)
+        // 7. Expenses Table (Pengeluaran)
         Schema::create('expenses', function (Blueprint $table) {
             $table->string('id')->primary(); // e.g. EXP-0001
             $table->date('date');
-            $table->string('category'); // BBM, Servis dan Perawatan, Gaji Sopir, Tol dan Parkir, dll.
-            $table->decimal('amount', 15, 2);
-            $table->string('car_id')->nullable();
+            $table->string('category');
             $table->text('note')->nullable();
+            $table->decimal('amount', 15, 2);
+            $table->string('created')->nullable(); // Tanggal Catat
+            $table->string('car_id')->nullable();
             $table->timestamps();
 
             $table->foreign('car_id')->references('id')->on('cars')->onDelete('set null');
         });
 
-        // 8. Partner Payments Table (Pembayaran Bagian Mitra)
+        // 8. Partner Payments Table (Pembayaran Mitra)
         Schema::create('partner_payments', function (Blueprint $table) {
             $table->string('id')->primary(); // e.g. PMT-0001
             $table->string('booking_id');
@@ -128,11 +131,19 @@ return new class extends Migration
             $table->text('note')->nullable();
             $table->timestamps();
 
-            $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('cascade');
             $table->foreign('partner_id')->references('id')->on('partners')->onDelete('cascade');
         });
 
-        // 9. Accounting Journals Table (Buku Besar & Jurnal Manual)
+        // 9. Accounts Table (Daftar Akun)
+        Schema::create('accounts', function (Blueprint $table) {
+            $table->string('code')->primary(); // e.g. 1101, 2101
+            $table->string('name'); // e.g. Kas/Bank
+            $table->string('group'); // Aset, Liabilitas, Ekuitas, Pendapatan, Beban
+            $table->string('normal'); // Debit, Kredit
+            $table->timestamps();
+        });
+
+        // 10. Journals Table (Jurnal Umum)
         Schema::create('journals', function (Blueprint $table) {
             $table->string('id')->primary(); // e.g. JRN-0001
             $table->date('date');
@@ -144,6 +155,31 @@ return new class extends Migration
             $table->string('reference')->nullable();
             $table->timestamps();
         });
+
+        // 11. Driver Payments Table (Pembayaran Driver)
+        Schema::create('driver_payments', function (Blueprint $table) {
+            $table->string('id')->primary(); // e.g. PDR0001
+            $table->string('assignment_key')->nullable();
+            $table->string('booking_id')->nullable();
+            $table->integer('unit_index')->default(0);
+            $table->string('driver_id')->nullable();
+            $table->string('driver_name')->nullable();
+            $table->date('date');
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->text('note')->nullable();
+            $table->timestamps();
+        });
+
+        // 12. Other Charges Table (Biaya Lain-lain)
+        Schema::create('other_charges', function (Blueprint $table) {
+            $table->string('id')->primary(); // e.g. BLY-0001
+            $table->string('customer_id');
+            $table->string('booking_id')->nullable();
+            $table->date('date');
+            $table->decimal('amount', 15, 2)->default(0);
+            $table->text('description')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -151,7 +187,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('other_charges');
+        Schema::dropIfExists('driver_payments');
         Schema::dropIfExists('journals');
+        Schema::dropIfExists('accounts');
         Schema::dropIfExists('partner_payments');
         Schema::dropIfExists('expenses');
         Schema::dropIfExists('payments');
@@ -162,4 +201,3 @@ return new class extends Migration
         Schema::dropIfExists('customers');
     }
 };
-

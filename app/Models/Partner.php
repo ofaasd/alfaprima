@@ -22,6 +22,21 @@ class Partner extends Model
         'account_name',
     ];
 
+    protected $appends = [
+        'accountNo',
+        'accountName',
+    ];
+
+    public function getAccountNoAttribute()
+    {
+        return $this->attributes['account_no'] ?? null;
+    }
+
+    public function getAccountNameAttribute()
+    {
+        return $this->attributes['account_name'] ?? null;
+    }
+
     public function cars()
     {
         return $this->hasMany(Car::class, 'partner_id');
@@ -32,4 +47,3 @@ class Partner extends Model
         return $this->hasMany(PartnerPayment::class, 'partner_id');
     }
 }
-

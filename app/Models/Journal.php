@@ -23,11 +23,25 @@ class Journal extends Model
         'reference',
     ];
 
+    protected $appends = [
+        'debitAccount',
+        'creditAccount',
+    ];
+
     protected function casts(): array
     {
         return [
             'amount' => 'float',
         ];
     }
-}
 
+    public function getDebitAccountAttribute()
+    {
+        return $this->attributes['debit_account'] ?? null;
+    }
+
+    public function getCreditAccountAttribute()
+    {
+        return $this->attributes['credit_account'] ?? null;
+    }
+}

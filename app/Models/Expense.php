@@ -16,9 +16,14 @@ class Expense extends Model
         'id',
         'date',
         'category',
+        'note',
         'amount',
         'car_id',
-        'note',
+        'created',
+    ];
+
+    protected $appends = [
+        'carId',
     ];
 
     protected function casts(): array
@@ -28,9 +33,13 @@ class Expense extends Model
         ];
     }
 
+    public function getCarIdAttribute()
+    {
+        return $this->attributes['car_id'] ?? null;
+    }
+
     public function car()
     {
         return $this->belongsTo(Car::class, 'car_id');
     }
 }
-

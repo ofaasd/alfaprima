@@ -11,11 +11,15 @@ use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\Expense;
 use App\Models\PartnerPayment;
+use App\Models\Account;
 use App\Models\Journal;
+use App\Models\DriverPayment;
+use App\Models\OtherCharge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class RentalController extends Controller
@@ -80,6 +84,9 @@ class RentalController extends Controller
                 'expenses' => Expense::orderBy('date', 'desc')->get(),
                 'partnerPayments' => PartnerPayment::orderBy('date', 'desc')->get(),
                 'journals' => Journal::orderBy('date', 'desc')->get(),
+                'accounts' => Account::orderBy('code')->get(),
+                'driverPayments' => DriverPayment::orderBy('date', 'desc')->get(),
+                'otherCharges' => OtherCharge::orderBy('date', 'desc')->get(),
             ],
         ]);
     }
@@ -256,8 +263,9 @@ class RentalController extends Controller
                 'trans' => $request->trans ?: 'Matic',
                 'status' => $request->status ?: 'Tersedia',
                 'ownership' => $request->ownership ?: 'sendiri',
-                'partner_id' => $request->partner_id ?: null,
-                'partner_rate' => (float) ($request->partner_rate ?: 0),
+                'partner_id' => $request->partner_id ?? $request->partnerId ?? null,
+                'partner_rate' => (float) ($request->partner_rate ?? $request->partnerRate ?? 0),
+                'vehicle_class' => $request->vehicle_class ?? $request->vehicleClass ?? null,
             ]
         );
 
@@ -394,6 +402,13 @@ class RentalController extends Controller
         $driver = $request->driver_id ? Driver::find($request->driver_id) : null;
         $driverName = $driver ? $driver->name : ($request->driver_name ?: null);
 
+        $unitsJson = null;
+        if ($request->has('units_json')) {
+            $unitsJson = is_string($request->units_json) ? $request->units_json : json_encode($request->units_json);
+        } elseif ($request->has('units')) {
+            $unitsJson = json_encode($request->units);
+        }
+
         $booking = Booking::updateOrCreate(
             ['id' => $id],
             [
@@ -414,6 +429,8 @@ class RentalController extends Controller
                 'meal_cost' => $mealCost,
                 'lodging_cost' => $lodgingCost,
                 'total' => $total,
+                'units_json' => $unitsJson,
+                'created' => $request->created ?: now()->toIso8601String(),
             ]
         );
 
@@ -587,6 +604,423 @@ class RentalController extends Controller
     }
 
     /**
+     * Driver Payment: Save
+     */
+    public function saveDriverPayment(Request $request)
+    {
+        $amount = (float) $request->amount;
+        if ($amount <= 0) {
+            return response()->json(['message' => 'Nominal harus lebih dari 0.'], 422);
+        }
+
+        $id = $request->id ?: $this->getNextId(DriverPayment::class, 'PDR');
+
+        $driverPayment = DriverPayment::create([
+            'id' => $id,
+            'assignment_key' => $request->assignment_key ?? $request->assignmentKey ?? '',
+            'booking_id' => $request->booking_id ?? $request->bookingId ?? null,
+            'unit_index' => (int) ($request->unit_index ?? $request->unitIndex ?? 0),
+            'driver_id' => $request->driver_id ?? $request->driverId ?? null,
+            'driver_name' => $request->driver_name ?? $request->driverName ?? '',
+            'date' => $request->date ?: now()->toDateString(),
+            'amount' => $amount,
+            'note' => $request->note ?: '',
+        ]);
+
+        return response()->json(['success' => true, 'data' => $driverPayment]);
+    }
+
+    /**
+     * Other Charge: Save
+     */
+    public function saveOtherCharge(Request $request)
+    {
+        $amount = (float) $request->amount;
+        if ($amount <= 0) {
+            return response()->json(['message' => 'Nominal harus lebih dari 0.'], 422);
+        }
+
+        $id = $request->id ?: $this->getNextId(OtherCharge::class, 'BLY-');
+
+        $otherCharge = OtherCharge::create([
+            'id' => $id,
+            'customer_id' => $request->customer_id ?? $request->customerId ?? null,
+            'booking_id' => $request->booking_id ?? $request->bookingId ?? null,
+            'date' => $request->date ?: now()->toDateString(),
+            'amount' => $amount,
+            'description' => $request->description ?: '',
+        ]);
+
+        return response()->json(['success' => true, 'data' => $otherCharge]);
+    }
+
+    /**
+     * Account: Save
+     */
+    public function saveAccount(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+            'name' => 'required|string',
+            'group' => 'required|string',
+            'normal' => 'required|string',
+        ]);
+
+        $account = Account::updateOrCreate(
+            ['code' => $request->code],
+            [
+                'name' => $request->name,
+                'group' => $request->group,
+                'normal' => $request->normal,
+            ]
+        );
+
+        return response()->json(['success' => true, 'data' => $account]);
+    }
+
+    /**
+     * Delete payment
+     */
+    public function deletePayment($id)
+    {
+        if (Auth::user()?->role !== 'admin') {
+            return response()->json(['message' => 'Hanya admin yang dapat menghapus pembayaran.'], 403);
+        }
+
+        $payment = Payment::find($id);
+        if ($payment) {
+            $booking = Booking::find($payment->booking_id);
+            $payment->delete();
+
+            if ($booking) {
+                $totalPaid = Payment::where('booking_id', $booking->id)->sum('amount');
+                $booking->status = ($totalPaid <= 0) ? 'Belum Bayar' : (($totalPaid >= $booking->total) ? 'Lunas' : 'DP');
+                $booking->save();
+            }
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Batch save/sync all database tables (matching persistToDatabase / apiSave)
+     */
+    public function saveAll(Request $request)
+    {
+        $data = $request->all();
+        if (!is_array($data)) {
+            return response()->json(['message' => 'Data tidak valid.'], 422);
+        }
+
+        DB::transaction(function () use ($data) {
+            Schema::disableForeignKeyConstraints();
+
+            // 1. Partners
+            if (isset($data['partners']) && is_array($data['partners'])) {
+                $ids = [];
+                foreach ($data['partners'] as $p) {
+                    if (empty($p['id'])) continue;
+                    $ids[] = $p['id'];
+                    Partner::updateOrCreate(
+                        ['id' => $p['id']],
+                        [
+                            'name' => $p['name'] ?? '',
+                            'wa' => $p['wa'] ?? '',
+                            'address' => $p['address'] ?? '',
+                            'bank' => $p['bank'] ?? '',
+                            'account_no' => $p['accountNo'] ?? $p['account_no'] ?? '',
+                            'account_name' => $p['accountName'] ?? $p['account_name'] ?? '',
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    Partner::whereNotIn('id', $ids)->whereDoesntHave('cars')->delete();
+                }
+            }
+
+            // 2. Customers
+            if (isset($data['customers']) && is_array($data['customers'])) {
+                $ids = [];
+                foreach ($data['customers'] as $c) {
+                    if (empty($c['id'])) continue;
+                    $ids[] = $c['id'];
+                    Customer::updateOrCreate(
+                        ['id' => $c['id']],
+                        [
+                            'nama' => $c['nama'] ?? '',
+                            'alamat' => $c['alamat'] ?? '',
+                            'wa' => $c['wa'] ?? '',
+                            'nik' => $c['nik'] ?? null,
+                            'sim' => $c['sim'] ?? null,
+                            'status' => $c['status'] ?? 'Aktif',
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    Customer::whereNotIn('id', $ids)->whereDoesntHave('bookings')->delete();
+                }
+            }
+
+            // 3. Cars
+            if (isset($data['cars']) && is_array($data['cars'])) {
+                $ids = [];
+                foreach ($data['cars'] as $c) {
+                    if (empty($c['id'])) continue;
+                    $ids[] = $c['id'];
+                    Car::updateOrCreate(
+                        ['id' => $c['id']],
+                        [
+                            'merk' => $c['merk'] ?? '',
+                            'jenis' => $c['jenis'] ?? '',
+                            'plat' => strtoupper(trim($c['plat'] ?? '')),
+                            'trans' => $c['trans'] ?? 'Matic',
+                            'status' => $c['status'] ?? 'Tersedia',
+                            'ownership' => $c['ownership'] ?? 'sendiri',
+                            'partner_id' => $c['partnerId'] ?? $c['partner_id'] ?? null,
+                            'partner_rate' => (float) ($c['partnerRate'] ?? $c['partner_rate'] ?? 0),
+                            'vehicle_class' => $c['vehicleClass'] ?? $c['vehicle_class'] ?? 'City Car',
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    Car::whereNotIn('id', $ids)->whereDoesntHave('bookings')->delete();
+                }
+            }
+
+            // 4. Drivers
+            if (isset($data['drivers']) && is_array($data['drivers'])) {
+                $ids = [];
+                foreach ($data['drivers'] as $d) {
+                    if (empty($d['id'])) continue;
+                    $ids[] = $d['id'];
+                    Driver::updateOrCreate(
+                        ['id' => $d['id']],
+                        [
+                            'name' => $d['name'] ?? '',
+                            'wa' => $d['wa'] ?? '',
+                            'address' => $d['address'] ?? '',
+                            'license' => $d['license'] ?? '',
+                            'status' => $d['status'] ?? 'Aktif',
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    Driver::whereNotIn('id', $ids)->whereDoesntHave('bookings')->delete();
+                }
+            }
+
+            // 5. Bookings
+            if (isset($data['bookings']) && is_array($data['bookings'])) {
+                $ids = [];
+                foreach ($data['bookings'] as $b) {
+                    if (empty($b['id'])) continue;
+                    $ids[] = $b['id'];
+                    $units = $b['units'] ?? null;
+                    $unitsJson = $b['unitsJson'] ?? $b['units_json'] ?? null;
+                    if ($units && is_array($units)) {
+                        $unitsJson = json_encode($units);
+                    }
+                    Booking::updateOrCreate(
+                        ['id' => $b['id']],
+                        [
+                            'customer_id' => $b['customerId'] ?? $b['customer_id'] ?? null,
+                            'car_id' => $b['carId'] ?? $b['car_id'] ?? null,
+                            'start' => $b['start'] ?? null,
+                            'end' => $b['end'] ?? null,
+                            'days' => (int) ($b['days'] ?? 0),
+                            'rate' => (float) ($b['rate'] ?? 0),
+                            'partner_rate' => (float) ($b['partnerRate'] ?? $b['partner_rate'] ?? 0),
+                            'driver_id' => $b['driverId'] ?? $b['driver_id'] ?? null,
+                            'driver_name' => $b['driverName'] ?? $b['driver_name'] ?? null,
+                            'driver_fee_per_day' => (float) ($b['driverFeePerDay'] ?? $b['driver_fee_per_day'] ?? 0),
+                            'driver_fee' => (float) ($b['driverFee'] ?? $b['driver_fee'] ?? 0),
+                            'destination' => $b['destination'] ?? '',
+                            'toll_cost' => (float) ($b['tollCost'] ?? $b['toll_cost'] ?? 0),
+                            'fuel_cost' => (float) ($b['fuelCost'] ?? $b['fuel_cost'] ?? 0),
+                            'meal_cost' => (float) ($b['mealCost'] ?? $b['meal_cost'] ?? 0),
+                            'lodging_cost' => (float) ($b['lodgingCost'] ?? $b['lodging_cost'] ?? 0),
+                            'total' => (float) ($b['total'] ?? 0),
+                            'status' => $b['status'] ?? 'Belum Bayar',
+                            'units_json' => $unitsJson,
+                            'created' => $b['created'] ?? now()->toIso8601String(),
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    Booking::whereNotIn('id', $ids)->delete();
+                }
+            }
+
+            // 6. Payments
+            if (isset($data['payments']) && is_array($data['payments'])) {
+                $ids = [];
+                foreach ($data['payments'] as $p) {
+                    if (empty($p['id'])) continue;
+                    $ids[] = $p['id'];
+                    Payment::updateOrCreate(
+                        ['id' => $p['id']],
+                        [
+                            'customer_id' => $p['customerId'] ?? $p['customer_id'] ?? null,
+                            'booking_id' => $p['bookingId'] ?? $p['booking_id'] ?? null,
+                            'amount' => (float) ($p['amount'] ?? 0),
+                            'status' => $p['status'] ?? 'Lunas',
+                            'date' => $p['date'] ?? now()->toDateString(),
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    Payment::whereNotIn('id', $ids)->delete();
+                }
+            }
+
+            // 7. Other Charges
+            if (isset($data['otherCharges']) && is_array($data['otherCharges'])) {
+                $ids = [];
+                foreach ($data['otherCharges'] as $o) {
+                    if (empty($o['id'])) continue;
+                    $ids[] = $o['id'];
+                    OtherCharge::updateOrCreate(
+                        ['id' => $o['id']],
+                        [
+                            'customer_id' => $o['customerId'] ?? $o['customer_id'] ?? null,
+                            'booking_id' => $o['bookingId'] ?? $o['booking_id'] ?? null,
+                            'date' => $o['date'] ?? now()->toDateString(),
+                            'amount' => (float) ($o['amount'] ?? 0),
+                            'description' => $o['description'] ?? '',
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    OtherCharge::whereNotIn('id', $ids)->delete();
+                }
+            }
+
+            // 8. Expenses
+            if (isset($data['expenses']) && is_array($data['expenses'])) {
+                $ids = [];
+                foreach ($data['expenses'] as $e) {
+                    if (empty($e['id'])) continue;
+                    $ids[] = $e['id'];
+                    Expense::updateOrCreate(
+                        ['id' => $e['id']],
+                        [
+                            'date' => $e['date'] ?? now()->toDateString(),
+                            'category' => $e['category'] ?? '',
+                            'note' => $e['note'] ?? '',
+                            'amount' => (float) ($e['amount'] ?? 0),
+                            'created' => $e['created'] ?? now()->toIso8601String(),
+                            'car_id' => $e['carId'] ?? $e['car_id'] ?? null,
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    Expense::whereNotIn('id', $ids)->delete();
+                }
+            }
+
+            // 9. Partner Payments
+            if (isset($data['partnerPayments']) && is_array($data['partnerPayments'])) {
+                $ids = [];
+                foreach ($data['partnerPayments'] as $pp) {
+                    if (empty($pp['id'])) continue;
+                    $ids[] = $pp['id'];
+                    PartnerPayment::updateOrCreate(
+                        ['id' => $pp['id']],
+                        [
+                            'booking_id' => $pp['bookingId'] ?? $pp['booking_id'] ?? null,
+                            'partner_id' => $pp['partnerId'] ?? $pp['partner_id'] ?? null,
+                            'date' => $pp['date'] ?? now()->toDateString(),
+                            'amount' => (float) ($pp['amount'] ?? 0),
+                            'status' => $pp['status'] ?? 'Dibayar',
+                            'note' => $pp['note'] ?? '',
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    PartnerPayment::whereNotIn('id', $ids)->delete();
+                }
+            }
+
+            // 10. Accounts
+            if (isset($data['accounts']) && is_array($data['accounts'])) {
+                $codes = [];
+                foreach ($data['accounts'] as $a) {
+                    if (empty($a['code'])) continue;
+                    $codes[] = $a['code'];
+                    Account::updateOrCreate(
+                        ['code' => $a['code']],
+                        [
+                            'name' => $a['name'],
+                            'group' => $a['group'],
+                            'normal' => $a['normal'],
+                        ]
+                    );
+                }
+                if (!empty($codes)) {
+                    Account::whereNotIn('code', $codes)->delete();
+                }
+            }
+
+            // 11. Journals
+            if (isset($data['journals']) && is_array($data['journals'])) {
+                $ids = [];
+                foreach ($data['journals'] as $j) {
+                    if (empty($j['id'])) continue;
+                    $ids[] = $j['id'];
+                    Journal::updateOrCreate(
+                        ['id' => $j['id']],
+                        [
+                            'date' => $j['date'] ?? now()->toDateString(),
+                            'note' => $j['note'] ?? '',
+                            'debit_account' => $j['debitAccount'] ?? $j['debit_account'] ?? '',
+                            'credit_account' => $j['creditAccount'] ?? $j['credit_account'] ?? '',
+                            'amount' => (float) ($j['amount'] ?? 0),
+                            'source' => $j['source'] ?? 'Manual',
+                            'reference' => $j['reference'] ?? '',
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    Journal::whereNotIn('id', $ids)->delete();
+                }
+            }
+
+            // 12. Driver Payments
+            if (isset($data['driverPayments']) && is_array($data['driverPayments'])) {
+                $ids = [];
+                foreach ($data['driverPayments'] as $dp) {
+                    if (empty($dp['id'])) continue;
+                    $ids[] = $dp['id'];
+                    DriverPayment::updateOrCreate(
+                        ['id' => $dp['id']],
+                        [
+                            'assignment_key' => $dp['assignmentKey'] ?? $dp['assignment_key'] ?? '',
+                            'booking_id' => $dp['bookingId'] ?? $dp['booking_id'] ?? null,
+                            'unit_index' => (int) ($dp['unitIndex'] ?? $dp['unit_index'] ?? 0),
+                            'driver_id' => $dp['driverId'] ?? $dp['driver_id'] ?? null,
+                            'driver_name' => $dp['driverName'] ?? $dp['driver_name'] ?? '',
+                            'date' => $dp['date'] ?? now()->toDateString(),
+                            'amount' => (float) ($dp['amount'] ?? 0),
+                            'note' => $dp['note'] ?? '',
+                        ]
+                    );
+                }
+                if (!empty($ids)) {
+                    DriverPayment::whereNotIn('id', $ids)->delete();
+                }
+            }
+
+            Schema::enableForeignKeyConstraints();
+        });
+
+        return response()->json([
+            'ok' => true,
+            'success' => true,
+            'savedAt' => now()->toIso8601String(),
+        ]);
+    }
+
+    /**
      * Accounting Journal: Save
      */
     public function saveJournal(Request $request)
@@ -626,6 +1060,9 @@ class RentalController extends Controller
             'payments' => Payment::all(),
             'expenses' => Expense::all(),
             'partnerPayments' => PartnerPayment::all(),
+            'driverPayments' => DriverPayment::all(),
+            'otherCharges' => OtherCharge::all(),
+            'accounts' => Account::all(),
             'journals' => Journal::all(),
         ];
 
@@ -648,8 +1085,11 @@ class RentalController extends Controller
         }
 
         DB::transaction(function () use ($data) {
-            Journal::truncate();
+            Schema::disableForeignKeyConstraints();
+            DriverPayment::truncate();
+            OtherCharge::truncate();
             PartnerPayment::truncate();
+            Journal::truncate();
             Expense::truncate();
             Payment::truncate();
             Booking::truncate();
@@ -657,7 +1097,9 @@ class RentalController extends Controller
             Car::truncate();
             Partner::truncate();
             Customer::truncate();
+            Account::truncate();
 
+            if (!empty($data['accounts'])) Account::insert($data['accounts']);
             if (!empty($data['customers'])) Customer::insert($data['customers']);
             if (!empty($data['partners'])) Partner::insert($data['partners']);
             if (!empty($data['cars'])) Car::insert($data['cars']);
@@ -666,7 +1108,10 @@ class RentalController extends Controller
             if (!empty($data['payments'])) Payment::insert($data['payments']);
             if (!empty($data['expenses'])) Expense::insert($data['expenses']);
             if (!empty($data['partnerPayments'])) PartnerPayment::insert($data['partnerPayments']);
+            if (!empty($data['driverPayments'])) DriverPayment::insert($data['driverPayments']);
+            if (!empty($data['otherCharges'])) OtherCharge::insert($data['otherCharges']);
             if (!empty($data['journals'])) Journal::insert($data['journals']);
+            Schema::enableForeignKeyConstraints();
         });
 
         return response()->json(['success' => true, 'message' => 'Backup berhasil dipulihkan.']);
@@ -732,8 +1177,11 @@ class RentalController extends Controller
         }
 
         DB::transaction(function () {
-            Journal::truncate();
+            Schema::disableForeignKeyConstraints();
+            DriverPayment::truncate();
+            OtherCharge::truncate();
             PartnerPayment::truncate();
+            Journal::truncate();
             Expense::truncate();
             Payment::truncate();
             Booking::truncate();
@@ -741,6 +1189,7 @@ class RentalController extends Controller
             Car::truncate();
             Partner::truncate();
             Customer::truncate();
+            Schema::enableForeignKeyConstraints();
         });
 
         return response()->json(['success' => true]);
