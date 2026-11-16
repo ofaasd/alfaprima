@@ -810,6 +810,35 @@ nav .nav-dropdown-menu button.active{background:var(--gold);border-color:var(--g
   }
 }
 
+/* Dashboard: kartu ringkas mengikuti lebar konten teks */
+#dashboard .grid{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+#dashboard .grid>.stat,
+#dashboard .timeline-stats-row>.stat,
+#dashboard .availability-stats-row>.stat{
+  flex:0 1 auto;width:max-content;max-width:100%;min-width:0;
+  padding:8px 11px;gap:3px;
+}
+#dashboard .stat small{font-size:11px;line-height:1.25;white-space:nowrap}
+#dashboard .stat strong{font-size:16px;line-height:1.25;white-space:nowrap}
+#dashboard .timeline-stats-row,#dashboard .availability-stats-row{align-items:flex-start;gap:7px}
+#dashboard .timeline-stats-row .stat,#dashboard .availability-stats-row .stat{flex:0 1 auto}
+#dashboard .dashboard-booking-stat{
+  display:flex;align-items:center;gap:10px;cursor:default!important;
+  width:max-content;max-width:100%;
+}
+#dashboard .dashboard-booking-stat:hover{transform:none!important;border-color:var(--line)!important}
+#dashboard .dashboard-booking-stat .dashboard-booking-stat-main{display:flex;flex-direction:column;gap:3px}
+#dashboard .dashboard-booking-stat .dashboard-booking-add{
+  width:27px;height:27px;min-height:27px;padding:0;border-radius:50%;
+  font-size:19px;line-height:1;flex:0 0 27px;
+}
+#dashboard .dashboard-overdue-main-dropdown>summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#dashboard .dashboard-overdue-total{font-size:12px;color:#fbbf24;white-space:nowrap}
+@media(max-width:700px){
+  #dashboard .grid>.stat,#dashboard .timeline-stats-row>.stat,#dashboard .availability-stats-row>.stat{padding:7px 9px}
+  #dashboard .stat strong{font-size:15px}
+}
+
 </style></head>
 <body class="auth-required">
 <div id="authScreen" style="position:fixed;inset:0;z-index:1000;background:#0b1220;display:flex;align-items:center;justify-content:center;padding:18px">
@@ -837,20 +866,20 @@ nav .nav-dropdown-menu button.active{background:var(--gold);border-color:var(--g
 <button data-tab="pelanggan">Pelanggan</button><button data-tab="mitra">Mitra</button><button data-tab="armada">Armada</button><button data-tab="driver">Driver</button><button data-tab="pembayaran">Pembayaran</button><button data-tab="pengeluaran">Pengeluaran</button><button data-tab="pengguna" id="usersNav" class="hidden">Pengguna</button>
 </div></details>
 <details class="nav-dropdown"><summary>Rekap</summary><div class="nav-dropdown-menu"><button data-tab="daftarBooking">Rekap Booking</button><button data-tab="daftarTagihanMitra">Rekap Tagihan Mitra</button><button data-tab="daftarTagihanDriver">Rekap Tagihan Driver</button></div></details>
-<button data-tab="laporan">Laporan</button>
+<button data-tab="laporan">Laporan</button><button data-tab="changelog">Riwayat Perubahan</button>
 </nav>
 <section id="dashboard">
-<div class="grid">
-<div class="stat dashboard-customer-card" role="button" tabindex="0" aria-label="Buka pilihan menu pelanggan" onclick="toggleCustomerQuickActions()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCustomerQuickActions()}"><small>Total Pelanggan</small><strong id="sCust">0</strong></div><div class="stat dashboard-nav-card" role="button" tabindex="0" aria-label="Buka menu Armada" title="Klik untuk membuka menu Armada" onclick="openDashboardMenu('armada')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDashboardMenu('armada')}"><small>Total Armada</small><strong id="sCar">0</strong></div><div class="stat dashboard-nav-card dashboard-booking-card" role="button" tabindex="0" aria-label="Tambah Booking" title="+ Booking" onclick="openDashboardMenu('booking');toggleBookingFormContainer(true)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDashboardMenu('booking');toggleBookingFormContainer(true)}"><small>Total Booking</small><strong id="sBook">0</strong></div><div class="stat dashboard-nav-card dashboard-income-card" role="button" tabindex="0" aria-label="Tampilkan rincian pemasukan bulan berjalan" title="Klik untuk melihat rincian pembayaran bulan ini" onclick="toggleDashboardIncomeDetails()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDashboardIncomeDetails()}"><small id="sPayLabel">Pemasukan Bulan</small><strong id="sPay">Rp0</strong></div></div>
+<div class="grid"><div class="stat dashboard-nav-card dashboard-income-card" role="button" tabindex="0" aria-label="Tampilkan rincian pemasukan bulan berjalan" title="Klik untuk melihat rincian pembayaran bulan ini" onclick="toggleDashboardIncomeDetails()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDashboardIncomeDetails()}"><small id="sPayLabel">Pemasukan Bulan</small><strong id="sPay">Rp0</strong></div></div>
 <div id="dashboardOverdueWarnings" class="card hidden dashboard-overdue-warning-card" style="margin:0 0 10px;border:1px solid #b45309;background:rgba(180,83,9,.10)">
   <details class="dashboard-overdue-main-dropdown">
     <summary>
       <span class="dashboard-overdue-main-title">⚠ Peringatan Tagihan Belum Lunas</span>
       <strong id="dashboardOverdueCount"></strong>
+      <strong id="dashboardOverdueTotal" class="dashboard-overdue-total">Total: Rp0</strong>
       <span class="dashboard-overdue-main-chevron">▾</span>
     </summary>
     <div class="dashboard-overdue-main-content">
-      <div class="muted" style="font-size:11px;margin-bottom:8px">Booking yang belum lunas lebih dari 7 hari setelah tanggal selesai sewa. Data dikelompokkan berdasarkan pelanggan.</div>
+      <div class="muted" style="font-size:11px;margin-bottom:8px">Booking yang belum lunas lebih dari 5 hari setelah tanggal selesai sewa. Data dikelompokkan berdasarkan pelanggan.</div>
       <div id="dashboardOverdueGroups" class="dashboard-overdue-groups"></div>
     </div>
   </details>
@@ -866,13 +895,23 @@ nav .nav-dropdown-menu button.active{background:var(--gold);border-color:var(--g
     <button class="btn small" type="button" onclick="openCustomerMenu('edit')">Edit Pelanggan</button>
   </div>
 </div>
-<div class="dashboard-fleet-layout"><div class="card dashboard-fleet-card" style="margin-top:14px"><div class="field availability-date-field"><label for="availabilityDate">Cek tanggal</label><input id="availabilityDate" type="date" onchange="render()"></div><div class="muted" id="availabilitySummary" style="font-size:11px;margin:6px 0 10px"></div><div class="tablewrap available-fleet-wrap"><table id="availableFleetTable"><thead><tr><th>Armada Tersedia</th><th>Klasifikasi</th><th>Nomor Polisi</th><th>Status</th></tr></thead><tbody id="privateAvailabilityRows"></tbody></table></div></div>
+<div class="dashboard-fleet-layout">
 <div class="card dashboard-timeline-card" style="margin-top:14px">
-  <div class="timeline-booking-action" style="display:flex;justify-content:flex-start;margin:0 0 10px"><button class="btn primary small" type="button" onclick="openDashboardMenu('booking');toggleBookingFormContainer(true);document.getElementById('bookingFormContainer')?.scrollIntoView({behavior:'smooth',block:'start'})">Booking</button></div>
+  <div class="timeline-stats-row">
+    <div class="stat dashboard-booking-card dashboard-booking-stat"><div class="dashboard-booking-stat-main"><small>Total Booking</small><strong id="sBook">0</strong></div><button class="btn primary small dashboard-booking-add" type="button" aria-label="Tambah booking" title="Tambah booking" onclick="openDashboardMenu('booking');toggleBookingFormContainer(true);document.getElementById('bookingFormContainer')?.scrollIntoView({behavior:'smooth',block:'start'})">＋</button></div>
+    <div class="stat dashboard-customer-card" role="button" tabindex="0" aria-label="Buka pilihan menu pelanggan" onclick="toggleCustomerQuickActions()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCustomerQuickActions()}"><small>Total Pelanggan</small><strong id="sCust">0</strong></div>
+  </div>
   <div class="timeline-head"><h3 style="margin:0">Timeline Armada Terjadwal</h3><div class="field timeline-month-field"><label for="fleetTimelineMonth">Bulan</label><input id="fleetTimelineMonth" type="month" onchange="render()"></div></div>
   <div class="muted timeline-summary" id="fleetTimelineSummary"></div>
   <div class="tablewrap timeline-table-wrap"><table class="fleet-timeline-table"><thead id="fleetTimelineHead"></thead><tbody id="fleetTimelineRows"></tbody></table></div>
-</div></div>
+</div>
+<div class="card dashboard-fleet-card" style="margin-top:14px">
+  <div class="availability-stats-row">
+    <div class="stat dashboard-nav-card" role="button" tabindex="0" aria-label="Buka menu Armada" title="Klik untuk membuka menu Armada" onclick="openDashboardMenu('armada')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDashboardMenu('armada')}"><small>Total Armada</small><strong id="sCar">0</strong></div>
+  </div>
+  <div class="field availability-date-field"><label for="availabilityDate">Cek tanggal</label><input id="availabilityDate" type="date" onchange="render()"></div><div class="muted" id="availabilitySummary" style="font-size:11px;margin:6px 0 10px"></div><div class="tablewrap available-fleet-wrap"><table id="availableFleetTable"><thead><tr><th>Armada Tersedia</th><th>Klasifikasi</th><th>Nomor Polisi</th><th>Status</th></tr></thead><tbody id="privateAvailabilityRows"></tbody></table></div>
+</div>
+</div>
 </section>
 <section id="pelanggan" class="hidden">
 <div class="toolbar"><h2>Data Pelanggan</h2><input id="qCust" placeholder="Cari ID / nama / WA" style="max-width:260px"></div>
@@ -978,7 +1017,7 @@ nav .nav-dropdown-menu button.active{background:var(--gold);border-color:var(--g
   </form>
 </div>
 <div class="card" style="margin-top:14px">
-  <div class="toolbar"><h3>Riwayat Pengeluaran</h3><strong id="expenseTotal" style="color:var(--gold)">Rp0</strong></div><div class="field no-print" style="margin:10px 0 14px"><label for="qExpenseHistory">Cari Riwayat Pengeluaran</label><input id="qExpenseHistory" type="search" placeholder="Cari ID, tanggal, kategori, keterangan, atau nominal..." oninput="render()"></div>
+  <div class="toolbar"><h3>Riwayat Pengeluaran</h3><strong id="expenseTotal" style="color:var(--gold)">Rp0</strong></div><div class="formgrid no-print" style="margin:10px 0 14px;grid-template-columns:minmax(180px,1fr) minmax(220px,2fr);align-items:end"><div class="field"><label for="expenseMonthFilter">Pilih Bulan Riwayat</label><input id="expenseMonthFilter" type="month" onchange="render()"></div><div class="field"><label for="qExpenseHistory">Cari Riwayat Pengeluaran</label><input id="qExpenseHistory" type="search" placeholder="Cari ID, tanggal, kategori, keterangan, atau nominal..." oninput="render()"></div></div>
   <div class="tablewrap"><table><thead><tr><th>ID Pengeluaran</th><th>Tanggal</th><th>Kategori</th><th>Keterangan</th><th>Nominal</th><th class="no-print">Aksi</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
 </div>
 </section>
@@ -1064,6 +1103,25 @@ nav .nav-dropdown-menu button.active{background:var(--gold);border-color:var(--g
 <div class="card" style="display:none;margin-top:14px"><div class="toolbar"><h3>Rekap Pelanggan Belum Lunas</h3><div class="actions no-print"><input id="qUnpaidCustomer" placeholder="Cari ID / nama / WA" style="max-width:240px"><button class="btn" onclick="printUnpaidCustomers()">Cetak Rekap</button></div></div><div class="notice">Menampilkan pelanggan yang masih memiliki sisa tagihan dari satu atau beberapa booking. Total tagihan dan pembayaran digabung berdasarkan ID pelanggan.</div><div class="tablewrap"><table><thead><tr><th>ID Pelanggan</th><th>Nama Pelanggan</th><th>No. WA</th><th>ID Booking</th><th>Jumlah Booking</th><th>Total Tagihan</th><th>Total Dibayar</th><th>Sisa Tagihan</th></tr></thead><tbody id="unpaidCustomerRows"></tbody></table></div><div class="toolbar" style="margin-top:12px"><strong id="unpaidCustomerSummary">0 pelanggan • Sisa tagihan Rp0</strong></div></div>
 <div class="card" style="margin-top:14px"><h3>Rincian Laba Rugi Bulanan</h3><div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Jenis</th><th>Keterangan</th><th>Nominal</th></tr></thead><tbody id="plRows"></tbody></table></div></div><div class="card" style="margin-top:14px"><h3>Rekap Booking</h3><div class="tablewrap"><table><thead><tr><th class="no-print">Pilih</th><th>ID Booking</th><th>Pelanggan</th><th>Armada</th><th>Total</th><th>Dibayar</th><th>Sisa</th><th>Status</th></tr></thead><tbody id="reportRows"></tbody></table></div></div>
 <div class="row no-print" style="margin-top:14px"><button class="btn" onclick="exportCSV()">Ekspor data booking CSV</button><button class="btn danger" id="clearAllBtn" onclick="clearAll()">Hapus seluruh data</button></div>
+</section>
+
+<section id="changelog" class="hidden">
+  <div class="toolbar" style="align-items:center;gap:12px;flex-wrap:wrap">
+    <div><h2 style="margin:0">Riwayat Perubahan Aplikasi</h2><p class="muted" style="margin:6px 0 0">Catatan pembaruan fitur, perbaikan, dan perubahan Alfa Prima Rent Car.</p></div>
+    <span class="badge">Versi saat ini: 1.0.5</span>
+  </div>
+  <div class="card no-print" style="margin:14px 0">
+    <div class="formgrid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));align-items:end">
+      <div class="field"><label for="changelogVersionFilter">Filter versi</label>
+        <select id="changelogVersionFilter" onchange="renderChangelog()">
+          <option value="">Semua versi</option><option>1.0.5</option><option>1.0.4</option><option>1.0.3</option><option>1.0.2</option><option>1.0.1</option>
+        </select>
+      </div>
+      <div class="field"><label for="changelogSearch">Cari perubahan</label><input id="changelogSearch" type="search" placeholder="Cari fitur atau perbaikan..." oninput="renderChangelog()"></div>
+    </div>
+  </div>
+  <div id="changelogEntries" class="grid" style="grid-template-columns:1fr;gap:12px"></div>
+  <p class="muted" style="font-size:12px;margin-top:12px">Catatan: riwayat versi ini merupakan catatan rilis yang disertakan pada file aplikasi. Setiap pembaruan kode berikutnya perlu menambahkan entri versi baru agar tercatat.</p>
 </section>
 </main><footer>ALFA PRIMA RENT CAR • Laravel & MySQL</footer>
 <script>
@@ -1162,12 +1220,31 @@ function toggleDashboardIncomeDetails(){
     panel.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
 }
+
+const APP_CHANGELOG = [
+ {version:'1.0.5',date:'2026-11-16',title:'Riwayat Pengeluaran Bulanan',items:['Riwayat pengeluaran otomatis menampilkan bulan berjalan.','Filter bulan dan tahun untuk melihat periode lain.','Total pengeluaran mengikuti bulan dan pencarian yang dipilih.']},
+ {version:'1.0.4',date:'2026-11-16',title:'Perbaikan Timeline Armada dan Edit Booking',items:['Tombol tambah booking pada timeline menggunakan ikon plus.','Batang jadwal timeline diarahkan untuk membuka formulir edit booking.','Perbaikan navigasi agar formulir edit booking terbuka langsung.']},
+ {version:'1.0.3',date:'2026-11-13',title:'Perbaikan Pemulihan Backup',items:['Validasi struktur file backup JSON.','Dukungan data tambahan seperti driver dan pembayaran driver.','Perbaikan status sinkronisasi saat pemulihan data.']},
+ {version:'1.0.2',date:'2026-11-13',title:'Perbaikan Sinkronisasi Database',items:['Perbaikan antrean penyimpanan dan penanganan konflik revisi.','Penambahan penyimpanan data Biaya Lain-lain.']},
+ {version:'1.0.1',date:'2026-11-11',title:'Pembaruan Modul Operasional',items:['Penyempurnaan modul armada, booking, pembayaran, mitra, dan driver.','Penyempurnaan laporan dan pencatatan operasional.']}
+];
+function renderChangelog(){
+ const version=String($('changelogVersionFilter')?.value||'');
+ const query=String($('changelogSearch')?.value||'').trim().toLowerCase();
+ const rows=APP_CHANGELOG.filter(x=>(!version||x.version===version)&&[x.version,x.date,x.title,...x.items].join(' ').toLowerCase().includes(query));
+ $('changelogEntries').innerHTML=rows.map(x=>`<article class="card" style="padding:16px">
+  <div class="toolbar" style="align-items:center"><div><strong style="color:var(--gold);font-size:18px">v${esc(x.version)}</strong><h3 style="margin:5px 0">${esc(x.title)}</h3></div><span class="muted">${esc(x.date.split('-').reverse().join('-'))}</span></div>
+  <ul style="margin:10px 0 0;padding-left:20px">${x.items.map(item=>`<li style="margin:5px 0">${esc(item)}</li>`).join('')}</ul>
+ </article>`).join('')||'<div class="card muted">Tidak ada catatan perubahan yang cocok.</div>';
+}
+
 function openDashboardMenu(tabId){
   document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tabId));
   document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));
   const target=$(tabId);
   if(target)target.classList.remove('hidden');
   $('customerQuickActions')?.classList.add('hidden');
+  if(tabId==='changelog')renderChangelog();
   render();
 }
 function toggleCustomerQuickActions(){
@@ -1189,7 +1266,7 @@ function openCustomerMenu(mode){
   $('customerQuickActions')?.classList.add('hidden');
   render();
 }
-document.querySelectorAll('nav button').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));$(btn.dataset.tab).classList.remove('hidden');document.querySelectorAll('nav .nav-dropdown').forEach(dd=>dd.open=false);render()});
+document.querySelectorAll('nav button').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));$(btn.dataset.tab).classList.remove('hidden');document.querySelectorAll('nav .nav-dropdown').forEach(dd=>dd.open=false);if(btn.dataset.tab==='changelog')renderChangelog();render()});
 function resetCust(){$('custForm').reset();$('custEdit').value='';$('custTitle').textContent='Tambah Pelanggan'}
 $('custForm').onsubmit=e=>{e.preventDefault();let id=$('custEdit').value||nextId(db.customers,'PLG-'),o={id,nama:$('cNama').value.trim(),alamat:$('cAlamat').value.trim(),wa:$('cWa').value.trim(),nik:$('cNik').value.trim(),sim:$('cSim').value.trim(),status:$('cStatus').value};let i=db.customers.findIndex(x=>x.id===id);i<0?db.customers.push(o):db.customers[i]=o;resetCust();save()};
 function editCust(id){let x=cust(id);$('custEdit').value=x.id;$('cNama').value=x.nama;$('cAlamat').value=x.alamat;$('cWa').value=x.wa;$('cNik').value=x.nik;$('cSim').value=x.sim;$('cStatus').value=x.status;$('custTitle').textContent='Edit '+id;window.scrollTo(0,0)}
@@ -1330,12 +1407,38 @@ function resetBookingForm(){
   $('bUnitCount').value='1';renderBookingUnits(1);updateBookingCalc();
 }
 function editBooking(id){
-  let b=book(id);if(!b)return;document.querySelector('[data-tab="booking"]').click();toggleBookingFormContainer(true);
-  let units=bookingUnitsOf(b);
-  $('bookEdit').value=b.id;$('bCust').value=b.customerId;
-  $('bStart').value=b.start;$('bEnd').value=b.end;$('bUnitCount').value=String(units.length);renderBookingUnits(units.length,units);
-  $('bookSubmitBtn').textContent='Simpan Perubahan Booking';updateBookingCalc();window.scrollTo(0,0);
+  const b=book(String(id||''));
+  if(!b){alert('Booking '+String(id||'')+' tidak ditemukan. Muat ulang data lalu coba lagi.');return;}
+  // Bagian Booking tidak memiliki tombol navbar tersendiri; buka section secara langsung.
+  openDashboardMenu('booking');
+  toggleBookingFormContainer(true);
+  const units=bookingUnitsOf(b);
+  $('bookEdit').value=b.id;
+  $('bCust').value=b.customerId||'';
+  $('bStart').value=String(b.start||'').slice(0,10);
+  $('bEnd').value=String(b.end||'').slice(0,10);
+  $('bUnitCount').value=String(units.length);
+  renderBookingUnits(units.length,units);
+  $('bookSubmitBtn').textContent='Simpan Perubahan Booking';
+  updateBookingCalc();
+  $('bookingFormContainer').scrollIntoView({behavior:'smooth',block:'start'});
 }
+
+// Delegasi event: batang timeline dibuat ulang setiap kali bulan/data berubah.
+document.addEventListener('click',function(event){
+  const bar=event.target.closest('.fleet-timeline-bar[data-booking-id]');
+  if(!bar)return;
+  event.preventDefault();
+  event.stopPropagation();
+  editBooking(bar.getAttribute('data-booking-id'));
+});
+document.addEventListener('keydown',function(event){
+  const bar=event.target.closest('.fleet-timeline-bar[data-booking-id]');
+  if(!bar||!(event.key==='Enter'||event.key===' '))return;
+  event.preventDefault();
+  event.stopPropagation();
+  editBooking(bar.getAttribute('data-booking-id'));
+});
 $('bookForm').onsubmit=e=>{
   e.preventDefault();
   let customerId=$('bCust').value,start=$('bStart').value,end=$('bEnd').value,d=days(start,end),editId=$('bookEdit').value;
@@ -2206,12 +2309,13 @@ function renderDashboardOverdueWarnings(){
     const end=new Date(endDate+'T00:00:00');
     if(Number.isNaN(end.getTime()))return;
     const daysLate=Math.floor((today-end)/86400000);
-    if(daysLate<=7)return;
+    if(daysLate<=5)return;
     overdue.push({booking:b,endDate,daysLate,balance});
   });
   overdue.sort((a,b)=>b.daysLate-a.daysLate);
   panel.classList.toggle('hidden',overdue.length===0);
   $('dashboardOverdueCount').textContent=overdue.length+' booking';
+  $('dashboardOverdueTotal').textContent='Total tagihan: '+money(overdue.reduce((sum,x)=>sum+x.balance,0));
   const groups=new Map();
   overdue.forEach(x=>{
     const cid=String(x.booking.customerId||'');
@@ -2269,7 +2373,7 @@ if($('availabilitySummary'))$('availabilitySummary').textContent='Ketersediaan P
      const left=((x.from-1)/daysInMonth)*100;
      const width=((x.to-x.from+1)/daysInMonth)*100;
      const label=(x.booking.id||'Booking')+' · '+(cust(x.booking.customerId)?.nama||'Pelanggan');
-     return `<div class="fleet-timeline-bar" title="${esc(label)} (${formatDateDMY(x.start)}–${formatDateDMY(x.end)})" style="left:${left}%;width:${width}%">${esc(x.booking.id||'Booking')}</div>`;
+     return `<div class="fleet-timeline-bar" role="button" tabindex="0" data-booking-id="${esc(x.booking.id||'')}" aria-label="Edit booking ${esc(x.booking.id||'')}" title="${esc(label)} (${formatDateDMY(x.start)}–${formatDateDMY(x.end)}) · Klik untuk edit booking" style="left:${left}%;width:${width}%;cursor:pointer;pointer-events:auto;z-index:3">${esc(x.booking.id||'Booking')}</div>`;
    }).join('');
    const isPartner=(car.ownership||'sendiri')==='mitra';const partner=db.partners.find(m=>String(m.id)===String(car.partnerId||''));const ownerLabel=isPartner?(partner?.name||partner?.nama||'Mitra'):'Pribadi';return `<tr><td class="timeline-car-col"><strong>${esc(car.merk||'')} ${esc(car.jenis||'')}</strong><div class="timeline-car-meta"><small>${esc(car.plat||'-')}</small><span class="timeline-car-owner" title="${esc(ownerLabel)}">${esc(ownerLabel)}</span></div></td><td colspan="${daysInMonth}" class="timeline-track-cell"><div class="fleet-timeline-track">${bars}</div></td></tr>`;
  }).join('')||`<tr><td colspan="${daysInMonth+1}" class="muted">Tidak ada jadwal armada pada ${monthName}.</td></tr>`;
@@ -2385,10 +2489,19 @@ const unpaidCustomerList=[...unpaidByCustomer.values()].sort((a,b)=>b.balance-a.
 $('unpaidCustomerRows').innerHTML=visibleUnpaid.map(g=>{const c=cust(g.customerId)||{};return `<tr><td>${esc(g.customerId)}</td><td>${esc(c.nama||'-')}</td><td>${esc(c.wa||'-')}</td><td>${g.bookings.map(b=>esc(b.id)).join('<br>')}</td><td>${g.bookings.length}</td><td>${money(g.total)}</td><td>${money(g.paid)}</td><td><strong style="color:var(--red)">${money(g.balance)}</strong></td></tr>`}).join('')||'<tr><td colspan="8" class="muted">Tidak ada pelanggan dengan tagihan tertunggak.</td></tr>';
 $('unpaidCustomerSummary').textContent=unpaidCustomerList.length+' pelanggan • Sisa tagihan '+money(unpaidCustomerList.reduce((sum,g)=>sum+g.balance,0));
 
-$('expenseTotal').textContent=money(allExpense);
+const expenseMonthEl=$('expenseMonthFilter');
+if(expenseMonthEl&&!expenseMonthEl.value){
+  const now=new Date();
+  expenseMonthEl.value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+}
+const selectedExpenseMonth=String(expenseMonthEl?.value||'');
 const expenseQuery=String($('qExpenseHistory')?.value||'').trim().toLowerCase();
-const filteredExpenses=db.expenses.filter(x=>[x.id,x.date,x.category,x.note,x.amount,money(x.amount)].join(' ').toLowerCase().includes(expenseQuery));
-$('expenseRows').innerHTML=filteredExpenses.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(x.date)}</td><td>${esc(x.category)}</td><td>${esc(x.note)}</td><td>${money(x.amount)}</td><td class="no-print">${currentUser?.role==='admin'?`<button class="btn small danger" onclick="delExpense('${x.id}')">Hapus</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Tidak ada pengeluaran yang sesuai pencarian.</td></tr>';
+const filteredExpenses=db.expenses.filter(x=>
+  (!selectedExpenseMonth||String(x.date||'').slice(0,7)===selectedExpenseMonth) &&
+  [x.id,x.date,x.category,x.note,x.amount,money(x.amount)].join(' ').toLowerCase().includes(expenseQuery)
+);
+$('expenseTotal').textContent=money(filteredExpenses.reduce((sum,x)=>sum+(Number(x.amount)||0),0));
+$('expenseRows').innerHTML=filteredExpenses.slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))).map(x=>`<tr><td>${esc(x.id)}</td><td>${esc(x.date)}</td><td>${esc(x.category)}</td><td>${esc(x.note)}</td><td>${money(x.amount)}</td><td class="no-print">${currentUser?.role==='admin'?`<button class="btn small danger" onclick="delExpense('${x.id}')">Hapus</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Tidak ada pengeluaran pada bulan dan pencarian tersebut.</td></tr>';
 const ownExpenseCars=db.cars.filter(a=>String(a.ownership||'sendiri').toLowerCase()!=='mitra');
 const partnerExpenseCars=db.cars.filter(a=>String(a.ownership||'sendiri').toLowerCase()==='mitra');
 const expenseCarOption=a=>`<option value="${esc(a.id)}">${esc(a.merk||'')} ${esc(a.jenis||'')} (${esc(a.plat||'-')})</option>`;
