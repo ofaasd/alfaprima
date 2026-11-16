@@ -44,6 +44,18 @@ class RentalTest extends TestCase
         ]);
     }
 
+    public function test_load_data_returns_null_db_when_unauthenticated(): void
+    {
+        $response = $this->getJson('/api/load-data');
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'user' => null,
+            'db' => null,
+        ]);
+    }
+
     public function test_load_data_returns_database_entities(): void
     {
         $user = User::where('username', 'alfaprima')->first();

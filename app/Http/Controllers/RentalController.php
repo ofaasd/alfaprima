@@ -66,6 +66,14 @@ class RentalController extends Controller
 
         $user = Auth::user();
 
+        if (!$user) {
+            return response()->json([
+                'success' => true,
+                'user' => null,
+                'db' => null,
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'user' => $user ? [

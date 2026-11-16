@@ -803,8 +803,15 @@ nav .nav-dropdown-menu button.active{background:var(--gold);border-color:var(--g
 <div id="authScreen" style="position:fixed;inset:0;z-index:1000;background:#0b1220;display:flex;align-items:center;justify-content:center;padding:18px">
   <div class="card" style="width:min(440px,100%);padding:24px">
     <div class="brand" style="margin-bottom:4px">ALFA <span>PRIMA</span> RENT CAR</div>
-    <div class="muted" style="margin-bottom:18px">Login aman • Database Laravel & MySQL</div>
-    <div id="authContent"></div>
+    <div class="muted" style="margin-bottom:18px">Login aman • Database Laravel &amp; MySQL</div>
+    <div id="authContent">
+      <h3 style="margin-top:0;margin-bottom:14px;font-size:1.05rem;color:#e2e8f0">Masuk ke Aplikasi</h3>
+      <form id="authForm">
+        <div class="field"><label>Username</label><input id="authUser" required autocomplete="username" placeholder="Masukkan username"></div>
+        <div class="field" style="margin-top:12px"><label>Password</label><input id="authPass" type="password" required autocomplete="current-password" placeholder="Masukkan password"></div>
+        <button class="btn primary" style="width:100%;margin-top:18px" type="submit">Login</button>
+      </form>
+    </div>
   </div>
 </div>
 <header><div><div class="brand">ALFA <span>PRIMA</span> RENT CAR</div><div class="sub">Sistem Informasi Rental Mobil • Database MySQL • HP & Komputer</div></div><div style="display:flex;align-items:center;gap:10px"><div class="sub" id="syncStatus">Menghubungkan ke database MySQL…</div><button class="btn no-print" id="logoutBtn" style="padding:7px 10px">Keluar</button></div></header>
@@ -2624,17 +2631,18 @@ function normalizeDb(data){
           otherCharges:Array.isArray(data.otherCharges)?data.otherCharges:[],
           expenses:Array.isArray(data.expenses)?data.expenses:[],partners:Array.isArray(data.partners)?data.partners:[],partnerPayments:Array.isArray(data.partnerPayments)?data.partnerPayments:[],accounts:Array.isArray(data.accounts)?data.accounts:[],journals:Array.isArray(data.journals)?data.journals:[],drivers:Array.isArray(data.drivers)?data.drivers:[],driverPayments:Array.isArray(data.driverPayments)?data.driverPayments:[]};
 }
-function authView(mode){
-  document.body.classList.add('auth-required');
-  const content=$('authContent');
-  content.innerHTML=`<h3>Masuk ke aplikasi</h3><form id="authForm"><div class="field"><label>Username</label><input id="authUser" required autocomplete="username" value="alfaprima"></div>
-    <div class="field" style="margin-top:10px"><label>Password</label><input id="authPass" type="password" required autocomplete="current-password" value="password123"></div>
-    <button class="btn primary" style="width:100%;margin-top:16px">Login</button></form>`;
-
-  $('authForm').onsubmit = async e => {
+function bindAuthForm(){
+  const form = $('authForm');
+  if (!form) return;
+  form.onsubmit = async e => {
     e.preventDefault();
-    const username = $('authUser').value.trim(), password = $('authPass').value;
+    const username = $('authUser')?.value.trim() || '', password = $('authPass')?.value || '';
+    if (!username || !password) {
+      alert('Silakan masukkan username dan password.');
+      return;
+    }
     try {
+      setSyncStatus('Memeriksa akun…', '#cbd5e1');
       const res = await apiCall('/api/login', 'POST', { username, password });
       currentUser = res.user;
       document.body.classList.remove('auth-required');
@@ -2642,16 +2650,40 @@ function authView(mode){
       await loadAppData();
     } catch (err) {
       alert('Login gagal: ' + err.message);
+      setSyncStatus('Login gagal: ' + err.message, '#ffb3b3');
     }
   };
+}
+
+function authView(mode){
+  document.body.classList.add('auth-required');
+  if ($('authScreen')) $('authScreen').style.display = 'flex';
+  const content=$('authContent');
+  if (content) {
+    content.innerHTML=`<h3 style="margin-top:0;margin-bottom:14px;font-size:1.05rem;color:#e2e8f0">Masuk ke Aplikasi</h3>
+      <form id="authForm">
+        <div class="field"><label>Username</label><input id="authUser" required autocomplete="username" placeholder="Masukkan username"></div>
+        <div class="field" style="margin-top:12px"><label>Password</label><input id="authPass" type="password" required autocomplete="current-password" placeholder="Masukkan password"></div>
+        <button class="btn primary" style="width:100%;margin-top:18px" type="submit">Login</button>
+      </form>`;
+    bindAuthForm();
+  }
 }
 
 async function loadAppData(){
   setSyncStatus('Mengambil data dari database MySQL…');
   try {
     const res = await apiCall('/api/load-data');
+    if (!res.user) {
+      currentUser = null;
+      document.body.classList.add('auth-required');
+      if ($('authScreen')) $('authScreen').style.display = 'flex';
+      authView('login');
+      setSyncStatus('Silakan login terlebih dahulu', '#cbd5e1');
+      return;
+    }
     db = normalizeDb(res.db || {});
-    currentUser = res.user || { username: 'alfaprima', role: 'admin' };
+    currentUser = res.user;
     document.body.classList.remove('auth-required');
     if ($('authScreen')) $('authScreen').style.display = 'none';
     if ($('usersNav')) $('usersNav').classList.toggle('hidden', currentUser.role !== 'admin');
@@ -2734,6 +2766,7 @@ if ($('logoutBtn')) {
 }
 
 async function startApp() {
+  bindAuthForm();
   try {
     await loadAppData();
   } catch (err) {
