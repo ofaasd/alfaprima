@@ -1,13 +1,25 @@
 <!doctype html>
 <html lang="id">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1220"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="application-name" content="Alfa Prima"><meta name="apple-mobile-web-app-title" content="Alfa Prima">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Alfa Prima Rent Car — Sistem Laravel & MySQL</title>
 <style>
 :root{--bg:#0b1220;--panel:#121d30;--panel2:#18263d;--line:#2b3b55;--gold:#d8b45a;--text:#eef2f8;--muted:#9eacc1;--red:#e87979;--green:#64c69a}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Arial,sans-serif}
-header{padding:20px 24px;background:linear-gradient(120deg,#101b2d,#1c2c45);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+header{padding:max(16px,env(safe-area-inset-top)) 24px 16px;background:linear-gradient(120deg,#101b2d,#1c2c45);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.header-brand-wrap{display:flex;align-items:center;gap:12px}
+.header-logo{height:46px;width:auto;max-width:130px;object-fit:contain;border-radius:6px;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.35))}
+@media (max-width:600px){
+  .header-logo{height:36px;max-width:90px}
+  .header-brand-wrap{gap:9px}
+  .brand{font-size:17px}
+}
 .brand{font-size:20px;font-weight:800;letter-spacing:.4px}.brand span{color:var(--gold)}.sub{color:var(--muted);font-size:12px}
 main{max-width:1250px;margin:auto;padding:22px;padding-bottom:calc(22px + env(safe-area-inset-bottom))}
 nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
@@ -802,8 +814,11 @@ nav .nav-dropdown-menu button.active{background:var(--gold);border-color:var(--g
 <body class="auth-required">
 <div id="authScreen" style="position:fixed;inset:0;z-index:1000;background:#0b1220;display:flex;align-items:center;justify-content:center;padding:18px">
   <div class="card" style="width:min(440px,100%);padding:24px">
-    <div class="brand" style="margin-bottom:4px">ALFA <span>PRIMA</span> RENT CAR</div>
-    <div class="muted" style="margin-bottom:18px">Login aman • Database Laravel &amp; MySQL</div>
+    <div style="text-align:center;margin-bottom:16px">
+      <img src="/icons/alfa_prima_logo.png" alt="Logo Alfa Prima Rent Car" style="height:56px;width:auto;max-width:180px;object-fit:contain;margin-bottom:8px;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.4))">
+      <div class="brand" style="margin-bottom:4px">ALFA <span>PRIMA</span> RENT CAR</div>
+      <div class="muted">Login aman • Database Laravel &amp; MySQL</div>
+    </div>
     <div id="authContent">
       <h3 style="margin-top:0;margin-bottom:14px;font-size:1.05rem;color:#e2e8f0">Masuk ke Aplikasi</h3>
       <form id="authForm">
@@ -814,7 +829,7 @@ nav .nav-dropdown-menu button.active{background:var(--gold);border-color:var(--g
     </div>
   </div>
 </div>
-<header><div><div class="brand">ALFA <span>PRIMA</span> RENT CAR</div><div class="sub">Sistem Informasi Rental Mobil • Database MySQL • HP & Komputer</div></div><div style="display:flex;align-items:center;gap:10px"><div class="sub" id="syncStatus">Menghubungkan ke database MySQL…</div><button class="btn no-print" id="logoutBtn" style="padding:7px 10px">Keluar</button></div></header>
+<header><div class="header-brand-wrap"><img src="/icons/alfa_prima_logo.png" alt="Logo Alfa Prima Rent Car" class="header-logo"><div><div class="brand">ALFA <span>PRIMA</span> RENT CAR</div><div class="sub">Sistem Informasi Rental Mobil • Database MySQL • HP &amp; Komputer</div></div></div><div style="display:flex;align-items:center;gap:10px"><div class="sub" id="syncStatus">Menghubungkan ke database MySQL…</div><button class="btn primary no-print" id="installPwaBtn" style="display:none;padding:7px 12px" title="Pasang ke Layar Utama HP">📲 Pasang Aplikasi</button><button class="btn no-print" id="logoutBtn" style="padding:7px 10px">Keluar</button></div></header>
 <main>
 <nav class="no-print">
 <button class="active home-nav-button" data-tab="dashboard" aria-label="Home" title="Home"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M9 21v-7h6v7"/></svg></button>
@@ -2775,4 +2790,41 @@ async function startApp() {
   }
 }
 startApp();
+
+// Progressive Web App (PWA) Support
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = $('installPwaBtn');
+  if (btn) btn.style.display = 'inline-block';
+});
+
+if ($('installPwaBtn')) {
+  $('installPwaBtn').onclick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice && choice.outcome === 'accepted') {
+        $('installPwaBtn').style.display = 'none';
+      }
+      deferredPrompt = null;
+    } else {
+      alert('Untuk memasang di HP Android:\n1. Buka menu browser Chrome (titik 3 di pojok kanan atas)\n2. Pilih "Tambahkan ke Layar Utama" atau "Install Aplikasi".');
+    }
+  };
+}
+
+window.addEventListener('appinstalled', () => {
+  if ($('installPwaBtn')) $('installPwaBtn').style.display = 'none';
+  deferredPrompt = null;
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.log('SW registration note:', err);
+    });
+  });
+}
 </script></body></html>

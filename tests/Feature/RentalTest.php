@@ -27,6 +27,20 @@ class RentalTest extends TestCase
         $response->assertSee('RENT CAR');
     }
 
+    public function test_pwa_configuration_and_assets(): void
+    {
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('rel="manifest"', false);
+        $response->assertSee('/manifest.json');
+        $response->assertSee('theme-color');
+
+        $this->assertFileExists(public_path('manifest.json'));
+        $this->assertFileExists(public_path('sw.js'));
+        $this->assertFileExists(public_path('icons/icon-192.png'));
+        $this->assertFileExists(public_path('icons/icon-512.png'));
+    }
+
     public function test_login_successful(): void
     {
         $response = $this->postJson('/api/login', [
