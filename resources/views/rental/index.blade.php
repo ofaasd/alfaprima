@@ -1040,6 +1040,7 @@ main{padding-left:178px!important;padding-right:14px!important}
   <button class="toolbar-card active" data-tab="dashboard" title="Home"><span class="toolbar-icon">⌂</span><span>Home</span></button>
   <button class="toolbar-card" data-tab="editMenu" aria-expanded="false" onclick="toggleToolbarEditMenu()"><span class="toolbar-icon">＋</span><span>Tambah &amp; Edit</span></button>
   <div id="toolbarEditMenu" class="toolbar-edit-menu hidden">
+    <button data-tab="booking">Form Booking</button>
     <button data-tab="pelanggan">Pelanggan</button><button data-tab="mitra">Mitra</button>
     <button data-tab="armada">Armada</button><button data-tab="driver">Driver</button>
     <button data-tab="pembayaran">Pembayaran</button><button data-tab="pengeluaran">Pengeluaran</button>
@@ -1050,6 +1051,7 @@ main{padding-left:178px!important;padding-right:14px!important}
   <button class="toolbar-card" data-tab="changelog" onclick="openDashboardMenu('changelog')"><span class="toolbar-icon">◷</span><span>Riwayat Perubahan</span></button>
 </aside>
 <section id="dashboard">
+<div class="grid"><div class="stat dashboard-nav-card dashboard-income-card" role="button" tabindex="0" aria-label="Tampilkan rincian pemasukan bulan berjalan" title="Klik untuk melihat rincian pembayaran bulan ini" onclick="toggleDashboardIncomeDetails()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDashboardIncomeDetails()}"><small id="sPayLabel">Pemasukan Bulan</small><strong id="sPay">Rp0</strong></div><div class="stat dashboard-nav-card" role="button" tabindex="0" aria-label="Buka menu Armada" title="Klik untuk membuka menu Armada" onclick="openDashboardMenu('armada')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDashboardMenu('armada')}"><small>Total Armada</small><strong id="sCar">0</strong></div></div>
 
 <div id="dashboardOverdueWarnings" class="card dashboard-overdue-warning-card" style="margin:0 0 10px;border:1px solid #b45309;background:rgba(180,83,9,.10)">
   <details class="dashboard-overdue-main-dropdown">
@@ -1079,7 +1081,7 @@ main{padding-left:178px!important;padding-right:14px!important}
 <div class="dashboard-fleet-layout">
 <div class="card dashboard-timeline-card" style="margin-top:14px">
   <div class="timeline-stats-row">
-    <div class="stat dashboard-booking-card dashboard-booking-stat"><div class="dashboard-booking-stat-main"><small>Total Booking</small><strong id="sBook">0</strong></div></div>
+    <div class="stat dashboard-booking-card dashboard-booking-stat"><div class="dashboard-booking-stat-main"><small>Total Booking</small><strong id="sBook">0</strong></div><button class="btn primary small dashboard-booking-add" type="button" aria-label="Tambah booking" title="Tambah booking" onclick="openDashboardMenu('booking');toggleBookingFormContainer(true);document.getElementById('bookingFormContainer')?.scrollIntoView({behavior:'smooth',block:'start'})">＋</button></div>
     <div class="stat dashboard-customer-card" role="button" tabindex="0" aria-label="Buka pilihan menu pelanggan" onclick="toggleCustomerQuickActions()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCustomerQuickActions()}"><small>Total Pelanggan</small><strong id="sCust">0</strong></div>
   </div>
   <div class="timeline-head"><h3 style="margin:0">Timeline Armada Terjadwal</h3><div class="field timeline-month-field"><label for="fleetTimelineMonth">Bulan</label><input id="fleetTimelineMonth" type="month" onchange="render()"></div></div>
@@ -1527,7 +1529,11 @@ document.addEventListener('keydown',e=>{
 });
 
 function openDashboardMenu(tabId){
-  document.querySelectorAll('#rightToolbar button').forEach(x=>x.classList.toggle('active',x.dataset.tab===tabId));
+  const editTabs=['booking','pelanggan','mitra','armada','driver','pembayaran','pengeluaran','pengguna'];
+  document.querySelectorAll('#rightToolbar > button').forEach(x=>{
+    const isActive = x.dataset.tab === tabId || (x.dataset.tab === 'editMenu' && editTabs.includes(tabId));
+    x.classList.toggle('active', !!isActive);
+  });
   document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));
   const target=$(tabId);
   if(target)target.classList.remove('hidden');
@@ -1540,8 +1546,7 @@ function toggleCustomerQuickActions(){
   if(panel)panel.classList.toggle('hidden');
 }
 function openCustomerMenu(mode){
-  document.querySelectorAll('#rightToolbar button').forEach(x=>x.classList.toggle('active',x.dataset.tab==='pelanggan'));
-  document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));
+  openDashboardMenu('pelanggan');
   $('pelanggan').classList.remove('hidden');
   if(mode==='add'){
     resetCust();
@@ -1602,11 +1607,11 @@ function delCar(id){
 
 function bookingUnitOptions(index,card){
   let type=card?.querySelector('.bu-ownership')?.value||'sendiri',partnerId=card?.querySelector('.bu-partner')?.value||'';
-  let cars=db.cars.filter(a=>(a.ownership||'sendiri')===type&&['Tersedia','Disewa'].includes(a.status)&&(type!=='mitra'||(partnerId&&a.partnerId===partnerId)));
+  let cars=(db.cars||[]).filter(a=>(a.ownership||'sendiri')===type&&['Tersedia','Disewa'].includes(a.status)&&(type!=='mitra'||(partnerId&&a.partnerId===partnerId)));
   return '<option value="">Pilih armada</option>'+cars.map(a=>`<option value="${esc(a.id)}">${esc(a.jenis)} (${esc(a.plat)})</option>`).join('');
 }
 function bookingDriverOptions(){
-  return '<option value="">Tanpa sopir</option>'+db.drivers.filter(d=>d.status!=='Nonaktif').map(d=>`<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('');
+  return '<option value="">Tanpa sopir</option>'+(db.drivers||[]).filter(d=>d.status!=='Nonaktif').map(d=>`<option value="${esc(d.id)}">${esc(d.name)}</option>`).join('');
 }
 function renderBookingUnits(count,values=[]){
   let wrap=$('bookingUnits'); if(!wrap)return;
@@ -1616,7 +1621,7 @@ function renderBookingUnits(count,values=[]){
       <h3 style="margin:0 0 10px">Rincian Unit ${i+1}</h3>
       <div class="formgrid">
         <div class="field"><label>Jenis Kepemilikan Armada</label><select class="bu-ownership"><option value="sendiri">Pribadi</option><option value="mitra">Armada Mitra</option></select></div>
-        <div class="field bu-partner-wrap hidden"><label>Pilih Mitra</label><select class="bu-partner"><option value="">Pilih mitra</option>${db.partners.map(m=>`<option value="${esc(m.id)}">${esc(m.name)} (${m.id})</option>`).join('')}</select></div>
+        <div class="field bu-partner-wrap hidden"><label>Pilih Mitra</label><select class="bu-partner"><option value="">Pilih mitra</option>${(db.partners||[]).map(m=>`<option value="${esc(m.id)}">${esc(m.name)} (${m.id})</option>`).join('')}</select></div>
         <div class="field"><label>Armada</label><select class="bu-car" required>${bookingUnitOptions(i)}</select></div>
         <div class="field"><label>Harga Sewa per Hari (Rp)</label><input class="bu-rate" type="number" min="0" required value="${Number(v.rate||'')||''}"></div>
         <div class="field"><label>Biaya Lain-lain Unit (Rp)</label><input class="bu-other-cost" type="number" min="0" step="1" value="${Number(v.otherCost||0)}" placeholder="0"></div>
@@ -1647,7 +1652,7 @@ function renderBookingUnits(count,values=[]){
     card.querySelector('.bu-destination-type').value=v.destinationType||'';
     card.querySelector('.bu-destination-type').addEventListener('change',()=>{const rates={'Dalam kota':200000,'Luar kota dalam provinsi':250000,'Luar provinsi':300000,'Luar pulau':400000};card.querySelector('.bu-driver-fee').value=rates[card.querySelector('.bu-destination-type').value]||0;updateBookingCalc();});
     card.querySelector('.bu-driver-name').value=v.driverName||'';
-    card.querySelector('.bu-driver').addEventListener('change',()=>{let d=db.drivers.find(x=>x.id===card.querySelector('.bu-driver').value);card.querySelector('.bu-driver-name').value=d?.name||'';updateBookingDriverVisibility(card);updateBookingCalc()});
+    card.querySelector('.bu-driver').addEventListener('change',()=>{let d=(db.drivers||[]).find(x=>x.id===card.querySelector('.bu-driver').value);card.querySelector('.bu-driver-name').value=d?.name||'';updateBookingDriverVisibility(card);updateBookingCalc()});
     card.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',updateBookingCalc));
     card.querySelectorAll('select').forEach(el=>el.addEventListener('change',updateBookingCalc));
     updateBookingDriverVisibility(card);
@@ -1775,7 +1780,7 @@ $('bookForm').onsubmit=e=>{
     if(!['Tersedia','Disewa'].includes(c.status)){alert('Armada '+carId+' tidak tersedia.');return;}
     let clash=db.bookings.some(b=>b.id!==editId&&start<=b.end&&end>=b.start&&bookingUnitsOf(b).some(u=>u.carId===carId));
     if(clash){alert('Jadwal armada '+carId+' bentrok dengan booking lain.');return;}
-    let driver=db.drivers.find(x=>x.id===card.querySelector('.bu-driver').value),hasDriver=!!driver;
+    let driver=(db.drivers||[]).find(x=>x.id===card.querySelector('.bu-driver').value),hasDriver=!!driver;
     let fee=hasDriver?rupiahInput(card.querySelector('.bu-driver-fee').value):0;
     let toll=hasDriver?rupiahInput(card.querySelector('.bu-toll').value):0;
     let fuel=hasDriver?rupiahInput(card.querySelector('.bu-fuel').value):0;
@@ -2868,30 +2873,65 @@ const filteredPaymentHistory=db.payments.filter(p=>{
 });
 const paymentCustomerIds=[...new Set(filteredPaymentHistory.map(p=>String(p.customerId||'')))].sort((a,b)=>a.localeCompare(b));
 $('payRows').innerHTML=paymentCustomerIds.map(cid=>{let items=filteredPaymentHistory.filter(p=>String(p.customerId||'')===cid);let bookingIds=[...new Set(items.map(p=>p.bookingId))];let totalPaid=items.reduce((sum,p)=>sum+Number(p.amount||0),0);let allSettled=bookingIds.every(id=>statusBook(book(id)||{id,total:0})==='Lunas');let details=items.map(p=>`<div style="margin:6px 0;padding:6px;border-bottom:1px solid var(--line)"><div><b>${esc(p.bookingId)}</b> • ${esc(p.id)} • ${money(p.amount)} • ${formatDateDMY(p.date)}</div><div class="row no-print" style="gap:5px;margin-top:5px"><button class="btn small" onclick="editPayment('${esc(p.id)}')">Edit</button></div></div>`).join('');return `<tr><td class="no-print"><input type="checkbox" class="payment-customer-check" data-customer="${esc(cid)}" aria-label="Pilih pelanggan ${esc(cid)}"></td><td>${esc(cid)}</td><td>${esc(cust(cid)?.nama||'')}</td><td>${bookingIds.map(esc).join('<br>')}</td><td><strong>${money(totalPaid)}</strong></td><td><span class="badge ${allSettled?'ok':'warn'}">${allSettled?'Lunas':'Ada DP / belum lunas'}</span></td><td>${details}</td><td class="no-print"><button class="btn small" onclick="printCustomerPaymentNote('${esc(cid)}')">Cetak Nota</button></td></tr>`}).join('')||'<tr><td colspan="8" class="muted">Belum ada pembayaran.</td></tr>';
-db.expenses=db.expenses||[];let total=db.bookings.reduce((s,b)=>s+b.total,0),allIncome=db.payments.reduce((s,p)=>p.amount+s,0),allExpense=db.expenses.reduce((s,x)=>s+Number(x.amount||0),0),remain=db.bookings.reduce((s,b)=>s+Math.max(0,b.total-paid(b.id)),0),unpaid=db.bookings.filter(b=>statusBook(b)!=='Lunas').length;
-let period=$('reportMonth')?.value||new Date().toISOString().slice(0,7);
-const periodDate=new Date(period+'-01T00:00:00');const periodLabel=new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(periodDate);if($('incomeListTitle'))$('incomeListTitle').textContent='Daftar Pembayaran Bulan '+periodLabel;
-let monthIncome=db.payments.filter(p=>String(p.date||'').slice(0,7)===period).reduce((s,p)=>s+Number(p.amount||0),0);
-let dashboardCurrentMonth=(()=>{const now=new Date();return now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')})();
-const dashboardMonthPayments=db.payments.filter(p=>String(p.date||'').slice(0,7)===dashboardCurrentMonth).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+db.expenses=db.expenses||[];
+let total=(db.bookings||[]).reduce((s,b)=>s+Number(b.total||0),0);
+let allIncome=(db.payments||[]).reduce((s,p)=>Number(p.amount||0)+s,0);
+let allExpense=(db.expenses||[]).reduce((s,x)=>s+Number(x.amount||0),0);
+let remain=(db.bookings||[]).reduce((s,b)=>s+Math.max(0,Number(b.total||0)-paid(b.id)),0);
+let unpaid=(db.bookings||[]).filter(b=>statusBook(b)!=='Lunas').length;
+
+let period=$('reportMonth')?.value||getDefaultActiveMonth();
+let periodDate=new Date(period+'-01T00:00:00');
+let periodLabel=period;
+if(!isNaN(periodDate.getTime())){
+  periodLabel=new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(periodDate);
+}
+if($('incomeListTitle'))$('incomeListTitle').textContent='Daftar Pembayaran Bulan '+periodLabel;
+
+let monthIncome=(db.payments||[]).filter(p=>String(p.date||'').slice(0,7)===period).reduce((s,p)=>s+Number(p.amount||0),0);
+let monthExpense=(db.expenses||[]).filter(x=>String(x.date||'').slice(0,7)===period).reduce((s,x)=>s+Number(x.amount||0),0);
+
+let dashboardCurrentMonth=$('fleetTimelineMonth')?.value||getDefaultActiveMonth();
+const dashboardMonthPayments=(db.payments||[]).filter(p=>String(p.date||'').slice(0,7)===dashboardCurrentMonth).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
 let dashboardMonthIncome=dashboardMonthPayments.reduce((s,p)=>s+Number(p.amount||0),0);
-let dashboardMonthName=new Intl.DateTimeFormat('id-ID',{month:'long'}).format(new Date());$('sPayLabel').textContent='Pemasukan Bulan '+dashboardMonthName;
+
+let dashDate=new Date(dashboardCurrentMonth+'-01T00:00:00');
+let dashboardMonthName=!isNaN(dashDate.getTime())?new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(dashDate):dashboardCurrentMonth;
+if($('sPayLabel'))$('sPayLabel').textContent='Pemasukan Bulan '+dashboardMonthName;
 if($('dashboardIncomeTitle'))$('dashboardIncomeTitle').textContent='Daftar Pembayaran Bulan '+dashboardMonthName;
 if($('dashboardIncomeTotal'))$('dashboardIncomeTotal').textContent='Total: '+money(dashboardMonthIncome);
 if($('dashboardIncomeRows'))$('dashboardIncomeRows').innerHTML=dashboardMonthPayments.map(p=>`<tr><td>${esc(formatDateDMY(p.date))}</td><td>${esc(cust(p.customerId)?.nama||p.customerId||'-')}</td><td>${esc(p.bookingId||'-')}</td><td>${money(p.amount)}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Belum ada pembayaran pada bulan ini.</td></tr>';
-let monthExpense=db.expenses.filter(x=>String(x.date||'').slice(0,7)===period).reduce((s,x)=>s+Number(x.amount||0),0);
-const dashboardMonthBookings=db.bookings.filter(b=>String(b.start||'').slice(0,7)===dashboardCurrentMonth);
-const dashboardBookingMonthLabel=new Intl.DateTimeFormat('id-ID',{month:'long'}).format(new Date());
+
+let monthExpenseForDash=(db.expenses||[]).filter(x=>String(x.date||'').slice(0,7)===dashboardCurrentMonth).reduce((s,x)=>s+Number(x.amount||0),0);
+const dashboardMonthBookings=(db.bookings||[]).filter(b=>String(b.start||'').slice(0,7)===dashboardCurrentMonth);
 const bookingCardLabel=document.querySelector('#dashboard .dashboard-booking-card small');
-if(bookingCardLabel)bookingCardLabel.textContent='Total Booking '+dashboardBookingMonthLabel;
+if(bookingCardLabel)bookingCardLabel.textContent='Total Booking';
+
 renderDashboardOverdueWarnings();
-$('sCust').textContent=db.customers.length;$('sCar').textContent=db.cars.length;$('sBook').textContent=dashboardMonthBookings.length;$('sPay').textContent=money(dashboardMonthIncome);$('rBooking').textContent=money(total);$('rIncome').textContent=money(monthIncome);$('rRemain').textContent=money(remain);$('rExpense').textContent=money(monthExpense);$('rNet').textContent=money(monthIncome-monthExpense);$('rUnpaid').textContent=unpaid;
-const periodPayments=db.payments.filter(p=>String(p.date||'').slice(0,7)===period).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+
+if($('sCust'))$('sCust').textContent=(db.customers||[]).length;
+if($('sCar'))$('sCar').textContent=(db.cars||[]).length;
+if($('sBook'))$('sBook').textContent=(db.bookings||[]).length;
+if($('sPay'))$('sPay').textContent=money(dashboardMonthIncome);
+
+if($('rBooking'))$('rBooking').textContent=money(total);
+if($('rIncome'))$('rIncome').textContent=money(monthIncome);
+if($('rRemain'))$('rRemain').textContent=money(remain);
+if($('rExpense'))$('rExpense').textContent=money(monthExpense);
+if($('rNet'))$('rNet').textContent=money(monthIncome-monthExpense);
+if($('rUnpaid'))$('rUnpaid').textContent=unpaid;
+
+const periodPayments=(db.payments||[]).filter(p=>String(p.date||'').slice(0,7)===period).sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
 const periodIncome=periodPayments.reduce((sum,p)=>sum+Number(p.amount||0),0);
-$('incomeListTotal').textContent='Total: '+money(periodIncome);
-$('incomeRows').innerHTML=periodPayments.map(p=>`<tr><td>${esc(formatDateDMY(p.date))}</td><td>${esc(cust(p.customerId)?.nama||p.customerId||'-')}</td><td>${esc(p.bookingId||'-')}</td><td>${money(p.amount)}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Belum ada pemasukan pada periode ini.</td></tr>';
-let pl=[];db.payments.filter(p=>String(p.date||'').slice(0,7)===period).forEach(p=>pl.push({date:String(p.date||'').slice(0,10),kind:'Pemasukan',note:(cust(p.customerId)?.nama||p.customerId)+' • '+p.bookingId,amount:Number(p.amount||0)}));db.expenses.filter(x=>String(x.date||'').slice(0,7)===period).forEach(x=>pl.push({date:x.date,kind:'Pengeluaran',note:(x.category||'')+' • '+(x.note||''),amount:Number(x.amount||0)}));pl.sort((a,b)=>a.date.localeCompare(b.date));
-$('plRows').innerHTML=pl.map(x=>`<tr><td>${esc(x.date)}</td><td><span class="badge ${x.kind==='Pemasukan'?'ok':'bad'}">${x.kind}</span></td><td>${esc(x.note)}</td><td>${money(x.amount)}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Belum ada transaksi pada periode ini.</td></tr>';
+if($('incomeListTotal'))$('incomeListTotal').textContent='Total: '+money(periodIncome);
+if($('incomeRows'))$('incomeRows').innerHTML=periodPayments.map(p=>`<tr><td>${esc(formatDateDMY(p.date))}</td><td>${esc(cust(p.customerId)?.nama||p.customerId||'-')}</td><td>${esc(p.bookingId||'-')}</td><td>${money(p.amount)}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Belum ada pemasukan pada periode ini.</td></tr>';
+
+let pl=[];
+(db.payments||[]).filter(p=>String(p.date||'').slice(0,7)===period).forEach(p=>pl.push({date:String(p.date||'').slice(0,10),kind:'Pemasukan',note:(cust(p.customerId)?.nama||p.customerId)+' • '+p.bookingId,amount:Number(p.amount||0)}));
+(db.expenses||[]).filter(x=>String(x.date||'').slice(0,7)===period).forEach(x=>pl.push({date:x.date,kind:'Pengeluaran',note:(x.category||'')+' • '+(x.note||''),amount:Number(x.amount||0)}));
+pl.sort((a,b)=>a.date.localeCompare(b.date));
+if($('plRows'))$('plRows').innerHTML=pl.map(x=>`<tr><td>${esc(x.date)}</td><td><span class="badge ${x.kind==='Pemasukan'?'ok':'bad'}">${x.kind}</span></td><td>${esc(x.note)}</td><td>${money(x.amount)}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Belum ada transaksi pada periode ini.</td></tr>';
+
 if($('clearAllBtn'))$('clearAllBtn').classList.toggle('hidden',currentUser?.role!=='admin');
 if($('usersNav'))$('usersNav').classList.toggle('hidden',currentUser?.role!=='admin');
 if($('toolbarUsersNav'))$('toolbarUsersNav').classList.toggle('hidden',currentUser?.role!=='admin');
@@ -3201,12 +3241,99 @@ function printInvoice(){let customerId=$('invoicePick').value,month=$('invoiceMo
 $('invoiceMonth').onchange=()=>{render();showInvoice()};
 $('reportMonth').onchange=render;
 function printReport(){window.print()}
-function backup(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup_alfa_prima_rent_car.json';a.click();URL.revokeObjectURL(a.href)}
-$('restoreFile').onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.customers||!x.cars||!x.bookings||!x.payments)throw Error();if(!x.expenses)x.expenses=[];if(confirm('Pulihkan backup? Data saat ini akan diganti.')){db=x;save();alert('Backup berhasil dipulihkan.')}}catch(err){alert('File backup tidak valid.')}};r.readAsText(f);e.target.value=''};
+function backup(){
+  const normalized = normalizeDb(db || {});
+  const blob = new Blob([JSON.stringify(normalized, null, 2)], { type: 'application/json;charset=utf-8' });
+  const a = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  a.href = url;
+  a.download = 'backup_alfa_prima_rent_car_' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+$('restoreFile').onchange = e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onerror = () => alert('File backup tidak dapat dibaca oleh browser.');
+  r.onload = () => {
+    let x;
+    try {
+      const rawText = String(r.result || '').replace(/^\uFEFF/, '').trim();
+      if (!rawText) {
+        alert('File backup kosong (0 byte). Pastikan file yang diunggah memiliki isi data JSON yang benar.');
+        return;
+      }
+      x = JSON.parse(rawText);
+    } catch (err) {
+      alert('Isi file bukan JSON yang valid: ' + (err.message || err));
+      return;
+    }
+    const required = ['customers', 'cars', 'bookings', 'payments'];
+    if (!x || typeof x !== 'object' || Array.isArray(x) || required.some(k => !Array.isArray(x[k]))) {
+      alert('Struktur file backup tidak sesuai format Alfa Prima Rent Car. Pastikan file memiliki array data pelanggan, armada, booking, dan pembayaran.');
+      return;
+    }
+    const restored = normalizeDb(x);
+    const summary = 'Pelanggan: ' + restored.customers.length +
+      '\nArmada: ' + restored.cars.length +
+      '\nBooking: ' + restored.bookings.length +
+      '\nPembayaran: ' + restored.payments.length +
+      '\nPengeluaran: ' + restored.expenses.length;
+    if (confirm('Pulihkan backup berikut? Seluruh data saat ini akan diganti dengan isi file ini.\n\n' + summary + '\n\nLanjutkan pemulihan?')) {
+      try {
+        db = restored;
+        save();
+        alert('Backup berhasil dipulihkan dan sedang disinkronkan ke database MySQL.');
+      } catch (err) {
+        alert('Backup berhasil dibaca, tetapi gagal diterapkan ke tampilan: ' + (err.message || err));
+      }
+    }
+  };
+  r.readAsText(f, 'UTF-8');
+  e.target.value = '';
+};
 function exportCSV(){let rows=[['ID Booking','ID Pelanggan','Nama','ID Armada','Jenis Armada','Tanggal Awal','Tanggal Akhir','Lama Hari','Harga/Hari','Total','Dibayar','Sisa','Status'],...db.bookings.map(b=>[b.id,b.customerId,cust(b.customerId)?.nama||'',b.carId,car(b.carId)?.jenis||'',b.start,b.end,b.days,b.rate,b.total,paid(b.id),Math.max(0,b.total-paid(b.id)),statusBook(b)])];let csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\n');let blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='laporan_booking_alfa_prima.csv';a.click();URL.revokeObjectURL(a.href)}
-function clearAll(){if(currentUser?.role!=='admin'){alert('Hanya admin yang dapat menghapus seluruh data.');return}if(confirm('Yakin menghapus SELURUH data pelanggan, armada, booking, dan pembayaran? Unduh backup terlebih dahulu.')){db={customers:[],cars:[],bookings:[],payments:[],expenses:[],partners:[],partnerPayments:[],accounts:[],journals:[]};save()}}
+async function clearAll(){
+  if(currentUser?.role!=='admin'){
+    alert('Hanya admin yang dapat menghapus seluruh data.');
+    return;
+  }
+  if(!confirm('Yakin menghapus SELURUH data pelanggan, armada, booking, dan pembayaran? Unduh backup terlebih dahulu jika diperlukan.')){
+    return;
+  }
+  try {
+    setSyncStatus('Menghapus seluruh data di database…');
+    await apiCall('/api/clear-all', 'POST');
+    db = normalizeDb({ settings: db.settings });
+    if(typeof resetBookingForm==='function') resetBookingForm();
+    if(typeof resetCust==='function') resetCust();
+    if(typeof resetCar==='function') resetCar();
+    if(typeof resetDriver==='function') resetDriver();
+    if(typeof resetDriverPaymentForm==='function') resetDriverPaymentForm();
+    render();
+    setSyncStatus('Seluruh data berhasil dihapus ✓', '#64c69a');
+    alert('Seluruh data berhasil dihapus.');
+  } catch (err) {
+    setSyncStatus('Gagal menghapus data: ' + err.message, '#ffb3b3');
+    alert('Gagal menghapus data: ' + err.message);
+  }
+}
 ['qCust','qCar','qBook'].forEach(id=>$(id).addEventListener('input',render));
 $('qUnpaidCustomer')?.addEventListener('input',render);
+
+function getDefaultActiveMonth() {
+  const months = (db.bookings || [])
+    .map(b => String(b.start || '').slice(0, 7))
+    .filter(m => m && m.length === 7)
+    .sort();
+  const nowMonth = new Date().toISOString().slice(0, 7);
+  if (months.includes(nowMonth)) return nowMonth;
+  return months.length ? months[months.length - 1] : nowMonth;
+}
+
 function normalizeDb(data){
   return {
     customers:Array.isArray(data.customers)?data.customers:[],
@@ -3341,8 +3468,10 @@ function applyLoadedData(dbData, user){
     if ($('carProfitRows')) $('carProfitRows').innerHTML=carRows||'<tr><td colspan="6">Belum ada kendaraan.</td></tr>';
     let totalDriver=db.driverPayments.reduce((sum,p)=>sum+Number(p.amount||0),0);let totalIn=db.payments.reduce((s,p)=>s+Number(p.amount||0),0),totalPartner=db.partnerPayments.reduce((s,p)=>s+Number(p.amount||0),0),totalExp=db.expenses.reduce((s,x)=>s+Number(x.amount||0),0);
     if ($('overallProfit')) $('overallProfit').textContent='Hasil kas usaha (seluruh periode): '+money(totalIn-totalPartner-totalExp-totalDriver);
-    if($('invoiceMonth')&&!$('invoiceMonth').value)$('invoiceMonth').value=new Date().toISOString().slice(0,7);
-    if($('reportMonth')&&!$('reportMonth').value)$('reportMonth').value=new Date().toISOString().slice(0,7);
+    const defaultActiveMonth = getDefaultActiveMonth();
+    if($('invoiceMonth')&&!$('invoiceMonth').value)$('invoiceMonth').value=defaultActiveMonth;
+    if($('reportMonth')&&!$('reportMonth').value)$('reportMonth').value=defaultActiveMonth;
+    if($('fleetTimelineMonth')&&!$('fleetTimelineMonth').value)$('fleetTimelineMonth').value=defaultActiveMonth;
 
     if ($('settingSigUrl')) $('settingSigUrl').value = db.settings?.public_signature_url || '';
     if ($('settingSigName')) $('settingSigName').value = db.settings?.signature_name || 'Alfa Prima';

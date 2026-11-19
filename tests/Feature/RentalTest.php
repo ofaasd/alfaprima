@@ -282,5 +282,24 @@ class RentalTest extends TestCase
             'is_signed' => 1,
         ]);
     }
+
+    public function test_clear_all_forbidden_for_guest(): void
+    {
+        $response = $this->postJson('/api/clear-all');
+        $response->assertStatus(403);
+    }
+
+    public function test_clear_all_clears_database_for_admin(): void
+    {
+        $admin = User::first();
+        $this->assertGreaterThan(0, Customer::count());
+
+        $response = $this->actingAs($admin)->postJson('/api/clear-all');
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+
+        $this->assertEquals(0, Customer::count());
+        $this->assertEquals(0, Car::count());
+    }
 }
 
