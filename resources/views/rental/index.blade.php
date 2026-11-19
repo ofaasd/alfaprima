@@ -512,10 +512,12 @@ footer{color:var(--muted);font-size:11px;text-align:center;padding:25px}
 #dashboard .dashboard-customer-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 
 
-/* Kartu Total Booking memberi petunjuk tambah booking saat diarahkan */
-#dashboard .dashboard-booking-card{position:relative}
+/* Kartu Total Booking dapat diklik untuk membuka menu Booking */
+#dashboard .dashboard-booking-card{position:relative;cursor:pointer;transition:border-color .15s,transform .15s}
+#dashboard .dashboard-booking-card:hover{border-color:var(--gold);transform:translateY(-1px)}
+#dashboard .dashboard-booking-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #dashboard .dashboard-booking-card:hover::after{
-  content:"Klik untuk melakukan Booking";
+  content:"Klik untuk membuka menu Booking";
   position:absolute;
   top:-29px;
   left:50%;
@@ -887,6 +889,9 @@ main{padding-left:178px!important;padding-right:14px!important}
 #dashboard .fleet-return-item span{font-size:9px}
 #dashboard .fleet-booking-customer-info{min-width:0;margin-top:10px!important;padding:13px!important;align-self:start}
 #dashboard .fleet-booking-customer-info h3{font-size:14px;margin-bottom:12px;color:var(--gold)}
+#dashboard .fleet-customer-info-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+#dashboard .fleet-customer-info-heading h3{margin:0}
+#dashboard .fleet-info-close{flex:0 0 auto;width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center;font-size:20px;line-height:1;border-radius:7px}
 #dashboard .fleet-customer-field{display:flex;flex-direction:column;gap:3px;padding:9px 0;border-bottom:1px solid var(--line);min-width:0}
 #dashboard .fleet-customer-field small{font-size:10px;color:var(--muted)}
 #dashboard .fleet-customer-field strong,#dashboard .fleet-customer-field span,#dashboard .fleet-customer-field a{font-size:12px;overflow-wrap:anywhere;color:var(--text)}
@@ -1014,6 +1019,54 @@ main{padding-left:178px!important;padding-right:14px!important}
  #mitra .partner-payment-database-card .tablewrap table{min-width:390px}
 }
 
+/* Perbaikan horizontal scroll Timeline Armada:
+   kolom No. tetap di kiri, kolom Armada berada setelahnya dan tidak saling menumpuk. */
+#dashboard .timeline-table-wrap{
+  position:relative;
+  display:block;
+  width:100%;
+  max-width:100%;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  overscroll-behavior-x:contain;
+  scrollbar-gutter:stable;
+}
+#dashboard .fleet-timeline-table{
+  border-collapse:separate !important;
+  border-spacing:0;
+  table-layout:fixed;
+  width:max-content;
+  min-width:650px;
+}
+#dashboard .fleet-timeline-table .timeline-no-col{
+  position:sticky !important;
+  left:0 !important;
+  width:28px !important;
+  min-width:28px !important;
+  max-width:28px !important;
+  box-sizing:border-box;
+  background:var(--panel) !important;
+  z-index:5;
+}
+#dashboard .fleet-timeline-table .timeline-car-col{
+  position:sticky !important;
+  left:28px !important;
+  width:145px !important;
+  min-width:145px !important;
+  max-width:145px !important;
+  box-sizing:border-box;
+  background:var(--panel) !important;
+  z-index:4;
+  text-align:left;
+}
+#dashboard .fleet-timeline-table thead .timeline-no-col{z-index:8}
+#dashboard .fleet-timeline-table thead .timeline-car-col{z-index:7}
+#dashboard .fleet-timeline-table tbody .timeline-no-col,
+#dashboard .fleet-timeline-table tbody .timeline-car-col{
+  background:var(--panel) !important;
+  box-shadow:1px 0 0 var(--line);
+}
+
 </style></head>
 <body class="auth-required">
 <div id="authScreen" style="position:fixed;inset:0;z-index:1000;background:#0b1220;display:flex;align-items:center;justify-content:center;padding:18px">
@@ -1051,7 +1104,6 @@ main{padding-left:178px!important;padding-right:14px!important}
   <button class="toolbar-card" data-tab="changelog" onclick="openDashboardMenu('changelog')"><span class="toolbar-icon">◷</span><span>Riwayat Perubahan</span></button>
 </aside>
 <section id="dashboard">
-<div class="grid"><div class="stat dashboard-nav-card dashboard-income-card" role="button" tabindex="0" aria-label="Tampilkan rincian pemasukan bulan berjalan" title="Klik untuk melihat rincian pembayaran bulan ini" onclick="toggleDashboardIncomeDetails()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDashboardIncomeDetails()}"><small id="sPayLabel">Pemasukan Bulan</small><strong id="sPay">Rp0</strong></div><div class="stat dashboard-nav-card" role="button" tabindex="0" aria-label="Buka menu Armada" title="Klik untuk membuka menu Armada" onclick="openDashboardMenu('armada')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDashboardMenu('armada')}"><small>Total Armada</small><strong id="sCar">0</strong></div></div>
 
 <div id="dashboardOverdueWarnings" class="card dashboard-overdue-warning-card" style="margin:0 0 10px;border:1px solid #b45309;background:rgba(180,83,9,.10)">
   <details class="dashboard-overdue-main-dropdown">
@@ -1081,7 +1133,15 @@ main{padding-left:178px!important;padding-right:14px!important}
 <div class="dashboard-fleet-layout">
 <div class="card dashboard-timeline-card" style="margin-top:14px">
   <div class="timeline-stats-row">
-    <div class="stat dashboard-booking-card dashboard-booking-stat"><div class="dashboard-booking-stat-main"><small>Total Booking</small><strong id="sBook">0</strong></div><button class="btn primary small dashboard-booking-add" type="button" aria-label="Tambah booking" title="Tambah booking" onclick="openDashboardMenu('booking');toggleBookingFormContainer(true);document.getElementById('bookingFormContainer')?.scrollIntoView({behavior:'smooth',block:'start'})">＋</button></div>
+    <div class="stat dashboard-booking-card dashboard-booking-stat"
+         role="button"
+         tabindex="0"
+         title="Buka menu Booking"
+         aria-label="Buka menu Booking"
+         onclick="openDashboardMenu('booking')"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDashboardMenu('booking')}">
+      <div class="dashboard-booking-stat-main"><small>Total Booking</small><strong id="sBook">0</strong></div>
+    </div>
     <div class="stat dashboard-customer-card" role="button" tabindex="0" aria-label="Buka pilihan menu pelanggan" onclick="toggleCustomerQuickActions()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCustomerQuickActions()}"><small>Total Pelanggan</small><strong id="sCust">0</strong></div>
   </div>
   <div class="timeline-head"><h3 style="margin:0">Timeline Armada Terjadwal</h3><div class="field timeline-month-field"><label for="fleetTimelineMonth">Bulan</label><input id="fleetTimelineMonth" type="month" onchange="render()"></div></div>
@@ -1097,7 +1157,10 @@ main{padding-left:178px!important;padding-right:14px!important}
   <div class="tablewrap timeline-table-wrap"><table class="fleet-timeline-table"><thead id="fleetTimelineHead"></thead><tbody id="fleetTimelineRows"></tbody></table></div>
 </div>
 <div id="fleetBookingCustomerInfo" class="card fleet-booking-customer-info" aria-live="polite">
-  <h3>Informasi Pengiriman</h3>
+  <div class="fleet-customer-info-heading">
+    <h3 id="fleetBookingInfoTitle">Informasi Pengiriman</h3>
+    <button type="button" id="fleetInfoClose" class="btn small fleet-info-close" aria-label="Tutup Informasi Pengiriman" title="Tutup">×</button>
+  </div>
   <div class="muted fleet-customer-placeholder">Pilih batang jadwal pada Timeline atau tombol Buka Booking pada dropdown Armada Pulang untuk melihat informasi pelanggan.</div>
   <div id="fleetBookingCustomerDetails" class="hidden">
     <div class="fleet-customer-field"><small>Nama Pelanggan</small><strong id="fleetInfoCustomerName">-</strong></div>
@@ -2770,19 +2833,25 @@ if($('fleetTimelineMonth')){
  if($('fleetDispatchCount'))$('fleetDispatchCount').textContent=dispatchBookings.length+' booking';
  if($('fleetDispatchRows'))$('fleetDispatchRows').innerHTML=dispatchBookings.map(x=>`<div class="fleet-return-item"><b>${esc(x.car.jenis||x.car.merk||'Armada')}</b><span>${esc(x.car.plat||'-')}</span><span>${esc(x.booking.id||'-')} · kirim ${formatDateDMY(x.start)}</span><button type="button" class="btn small" onclick="editBooking('${esc(x.booking.id||'')}')">Buka Booking</button></div>`).join('')||'<div class="muted">Tidak ada armada yang harus dikirim besok.</div>';
  updateFleetDispatchVisibility();
- const uniqueCars=(db.cars||[]).slice().sort((a,b)=>String(a.jenis||'').localeCompare(String(b.jenis||'')));
+ const uniqueCars=[...new Map(scheduled.map(x=>[String(x.car.id),x.car])).values()]
+   .sort((a,b)=>{
+     const aPrivate=(a.ownership||'sendiri')!=='mitra'?0:1;
+     const bPrivate=(b.ownership||'sendiri')!=='mitra'?0:1;
+     if(aPrivate!==bPrivate)return aPrivate-bPrivate;
+     return String(a.jenis||a.merk||'').localeCompare(String(b.jenis||b.merk||''))||String(a.plat||'').localeCompare(String(b.plat||''));
+   });
  const monthName=new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(new Date(ty,tm-1,1));
  $('fleetTimelineSummary').textContent=scheduled.length+' jadwal penugasan pada '+monthName+' · '+uniqueCars.length+' armada terjadwal';
- $('fleetTimelineHead').innerHTML='<tr><th class="timeline-car-col">Armada</th>'+dayLabels.map(d=>'<th class="timeline-day">'+d+'</th>').join('')+'</tr>';
- $('fleetTimelineRows').innerHTML=uniqueCars.map(car=>{
+ $('fleetTimelineHead').innerHTML='<tr><th class="timeline-no-col">No.</th><th class="timeline-car-col">Armada</th>'+dayLabels.map(d=>'<th class="timeline-day">'+d+'</th>').join('')+'</tr>';
+ $('fleetTimelineRows').innerHTML=uniqueCars.map((car,index)=>{
    const bars=scheduled.filter(x=>String(x.car.id)===String(car.id)).map(x=>{
      const left=((x.from-1)/daysInMonth)*100;
      const width=((x.to-x.from+1)/daysInMonth)*100;
      const label=(x.booking.id||'Booking')+' · '+(cust(x.booking.customerId)?.nama||'Pelanggan');
      return `<div class="fleet-timeline-bar" role="button" tabindex="0" data-booking-id="${esc(x.booking.id||'')}" aria-label="Edit booking ${esc(x.booking.id||'')}" title="${esc(label)} (${formatDateDMY(x.start)}–${formatDateDMY(x.end)}) · Klik untuk edit booking" style="left:${left}%;width:${width}%;cursor:pointer;pointer-events:auto;z-index:3">${esc(x.booking.id||'Booking')}</div>`;
    }).join('');
-   const isPartner=(car.ownership||'sendiri')==='mitra';const partner=db.partners.find(m=>String(m.id)===String(car.partnerId||''));const ownerLabel=isPartner?(partner?.name||partner?.nama||'Mitra'):'Pribadi';return `<tr><td class="timeline-car-col"><strong class="timeline-car-name ${(db.bookings||[]).some(b=>bookingUnitsOf(b).some(u=>String(u.carId||b.carId||'')===String(car.id)&&String(u.start||b.start||'').slice(0,10)<=todayIso&&String(u.end||b.end||'').slice(0,10)>=todayIso))?'is-busy-today':'is-free-today'}" role="button" tabindex="0" data-timeline-car-id="${esc(car.id)}" title="Klik untuk membuat booking dengan armada ini">${esc(car.merk||'')} ${esc(car.jenis||'')}</strong><div class="timeline-car-meta"><small>${esc(car.plat||'-')}</small><span class="timeline-car-owner" title="${esc(ownerLabel)}">${esc(ownerLabel)}</span></div></td><td colspan="${daysInMonth}" class="timeline-track-cell"><div class="fleet-timeline-track">${bars}</div></td></tr>`;
- }).join('')||`<tr><td colspan="${daysInMonth+1}" class="muted">Tidak ada jadwal armada pada ${monthName}.</td></tr>`;
+   const isPartner=(car.ownership||'sendiri')==='mitra';const partner=db.partners.find(m=>String(m.id)===String(car.partnerId||''));const ownerLabel=isPartner?(partner?.name||partner?.nama||'Mitra'):'Pribadi';return `<tr><td class="timeline-no-col">${index+1}</td><td class="timeline-car-col"><strong class="timeline-car-name ${(db.bookings||[]).some(b=>bookingUnitsOf(b).some(u=>String(u.carId||b.carId||'')===String(car.id)&&String(u.start||b.start||'').slice(0,10)<=todayIso&&String(u.end||b.end||'').slice(0,10)>=todayIso))?'is-busy-today':'is-free-today'}" role="button" tabindex="0" data-timeline-car-id="${esc(car.id)}" title="Klik untuk membuat booking dengan armada ini">${esc(car.merk||'')} ${esc(car.jenis||'')}</strong><div class="timeline-car-meta"><small>${esc(car.plat||'-')}</small><span class="timeline-car-owner" title="${esc(ownerLabel)}">${esc(ownerLabel)}</span></div></td><td colspan="${daysInMonth}" class="timeline-track-cell"><div class="fleet-timeline-track">${bars}</div></td></tr>`;
+ }).join('')||`<tr><td colspan="${daysInMonth+2}" class="muted">Tidak ada jadwal armada pada ${monthName}.</td></tr>`;
 }
 
 // Timeline pengeluaran dashboard: filter per bulan, terbaru di atas.
@@ -2903,15 +2972,19 @@ if($('dashboardIncomeTotal'))$('dashboardIncomeTotal').textContent='Total: '+mon
 if($('dashboardIncomeRows'))$('dashboardIncomeRows').innerHTML=dashboardMonthPayments.map(p=>`<tr><td>${esc(formatDateDMY(p.date))}</td><td>${esc(cust(p.customerId)?.nama||p.customerId||'-')}</td><td>${esc(p.bookingId||'-')}</td><td>${money(p.amount)}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">Belum ada pembayaran pada bulan ini.</td></tr>';
 
 let monthExpenseForDash=(db.expenses||[]).filter(x=>String(x.date||'').slice(0,7)===dashboardCurrentMonth).reduce((s,x)=>s+Number(x.amount||0),0);
-const dashboardMonthBookings=(db.bookings||[]).filter(b=>String(b.start||'').slice(0,7)===dashboardCurrentMonth);
+// Jumlah booking pada kartu dashboard mengikuti bulan yang dipilih di Timeline Armada.
+const dashboardBookingMonth=$('fleetTimelineMonth')?.value||dashboardCurrentMonth;
+const dashboardMonthBookings=(db.bookings||[]).filter(b=>String(b.start||'').slice(0,7)===dashboardBookingMonth);
+const dashboardBookingMonthDate=new Date(dashboardBookingMonth+'-01T00:00:00');
+const dashboardBookingMonthLabel=!isNaN(dashboardBookingMonthDate.getTime())?new Intl.DateTimeFormat('id-ID',{month:'long'}).format(dashboardBookingMonthDate):'';
 const bookingCardLabel=document.querySelector('#dashboard .dashboard-booking-card small');
-if(bookingCardLabel)bookingCardLabel.textContent='Total Booking';
+if(bookingCardLabel)bookingCardLabel.textContent='Total Booking '+dashboardBookingMonthLabel;
 
 renderDashboardOverdueWarnings();
 
 if($('sCust'))$('sCust').textContent=(db.customers||[]).length;
 if($('sCar'))$('sCar').textContent=(db.cars||[]).length;
-if($('sBook'))$('sBook').textContent=(db.bookings||[]).length;
+if($('sBook'))$('sBook').textContent=dashboardMonthBookings.length;
 if($('sPay'))$('sPay').textContent=money(dashboardMonthIncome);
 
 if($('rBooking'))$('rBooking').textContent=money(total);
