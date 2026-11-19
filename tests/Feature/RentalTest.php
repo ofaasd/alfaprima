@@ -301,5 +301,31 @@ class RentalTest extends TestCase
         $this->assertEquals(0, Customer::count());
         $this->assertEquals(0, Car::count());
     }
+
+    public function test_save_all_succeeds_when_booking_has_no_is_signed_field(): void
+    {
+        $admin = User::first();
+        $response = $this->actingAs($admin)->postJson('/api/save-all', [
+            'bookings' => [
+                [
+                    'id' => 'BKG-9999',
+                    'customerId' => 'PLG-0001',
+                    'carId' => 'ARM-0001',
+                    'start' => '2026-11-20',
+                    'end' => '2026-11-21',
+                    'days' => 1,
+                    'rate' => 300000,
+                    'total' => 300000,
+                ]
+            ]
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+        $this->assertDatabaseHas('bookings', [
+            'id' => 'BKG-9999',
+            'is_signed' => 0,
+        ]);
+    }
 }
 

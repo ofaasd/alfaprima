@@ -981,9 +981,9 @@ class RentalController extends Controller
                             'status' => $b['status'] ?? 'Belum Bayar',
                             'units_json' => $unitsJson,
                             'created' => $b['created'] ?? now()->toIso8601String(),
-                            'signature_url' => $b['signatureUrl'] ?? $b['signature_url'] ?? null,
-                            'is_signed' => (bool) (!empty($b['isSigned'] ?? $b['is_signed'])),
-                            'signed_at' => $b['signedAt'] ?? $b['signed_at'] ?? null,
+                            'signature_url' => $b['signature_url'] ?? $b['signatureUrl'] ?? null,
+                            'is_signed' => (bool) ($b['is_signed'] ?? $b['isSigned'] ?? false),
+                            'signed_at' => $b['signed_at'] ?? $b['signedAt'] ?? null,
                         ]
                     );
                 }
@@ -1091,9 +1091,9 @@ class RentalController extends Controller
                     Account::updateOrCreate(
                         ['code' => $a['code']],
                         [
-                            'name' => $a['name'],
-                            'group' => $a['group'],
-                            'normal' => $a['normal'],
+                            'name' => $a['name'] ?? '',
+                            'group' => $a['group'] ?? '',
+                            'normal' => $a['normal'] ?? 'Debit',
                         ]
                     );
                 }

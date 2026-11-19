@@ -3335,10 +3335,16 @@ function getDefaultActiveMonth() {
 }
 
 function normalizeDb(data){
+  const bookings = (Array.isArray(data.bookings) ? data.bookings : []).map(b => ({
+    ...b,
+    signature_url: b.signature_url || b.signatureUrl || null,
+    is_signed: !!(b.is_signed || b.isSigned),
+    signed_at: b.signed_at || b.signedAt || null
+  }));
   return {
     customers:Array.isArray(data.customers)?data.customers:[],
     cars:Array.isArray(data.cars)?data.cars:[],
-    bookings:Array.isArray(data.bookings)?data.bookings:[],
+    bookings:bookings,
     payments:Array.isArray(data.payments)?data.payments:[],
     otherCharges:Array.isArray(data.otherCharges)?data.otherCharges:[],
     expenses:Array.isArray(data.expenses)?data.expenses:[],
