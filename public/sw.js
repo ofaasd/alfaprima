@@ -1,4 +1,4 @@
-const CACHE_NAME = 'alfaprima-v1';
+const CACHE_NAME = 'alfaprima-v3';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

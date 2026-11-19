@@ -56,6 +56,22 @@ class RentalTest extends TestCase
                 'role' => 'admin',
             ]
         ]);
+        $this->assertArrayHasKey('db', $response->json());
+        $this->assertArrayHasKey('customers', $response->json('db'));
+    }
+
+    public function test_login_failed_provides_clear_feedback(): void
+    {
+        $response = $this->postJson('/api/login', [
+            'username' => 'alfaprima',
+            'password' => 'wrongpassword',
+        ]);
+
+        $response->assertStatus(401);
+        $response->assertJson([
+            'success' => false,
+        ]);
+        $this->assertStringContainsString('Password yang dimasukkan salah', $response->json('message'));
     }
 
     public function test_load_data_returns_null_db_when_unauthenticated(): void

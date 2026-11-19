@@ -994,10 +994,11 @@ main{padding-left:178px!important;padding-right:14px!important}
     </div>
     <div id="authContent">
       <h3 style="margin-top:0;margin-bottom:14px;font-size:1.05rem;color:#e2e8f0">Masuk ke Aplikasi</h3>
+      <div id="authAlert" style="display:none;margin-bottom:14px;padding:10px 12px;border-radius:6px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;font-size:12px;line-height:1.45"></div>
       <form id="authForm">
         <div class="field"><label>Username</label><input id="authUser" required autocomplete="username" placeholder="Masukkan username"></div>
         <div class="field" style="margin-top:12px"><label>Password</label><input id="authPass" type="password" required autocomplete="current-password" placeholder="Masukkan password"></div>
-        <button class="btn primary" style="width:100%;margin-top:18px" type="submit">Login</button>
+        <button class="btn primary" style="width:100%;margin-top:18px" type="submit" id="authSubmitBtn">Login</button>
       </form>
     </div>
   </div>
@@ -1343,9 +1344,24 @@ async function apiCall(url, method = 'GET', body = null) {
     opts.body = JSON.stringify(body);
   }
   const res = await fetch(url, opts);
-  const data = await res.json();
+  let data;
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    data = await res.json();
+  } else {
+    const text = await res.text();
+    if (!res.ok) {
+      if (res.status === 419) {
+        throw new Error('Sesi keamanan CSRF kedaluwarsa. Silakan refresh halaman.');
+      }
+      throw new Error(`Server error (${res.status}): ${text.slice(0, 200)}`);
+    }
+    data = { success: true, text };
+  }
   if (!res.ok) {
-    throw new Error(data.message || 'Terjadi kesalahan sistem.');
+    const err = new Error(data && data.message ? data.message : `Terjadi kesalahan sistem (HTTP ${res.status}).`);
+    err.data = data;
+    throw err;
   }
   return data;
 }
@@ -3039,8 +3055,8 @@ function printSelectedInvoices(){
     try{
       const invoice=invoiceHtmlForBookings(selected,signatureUrl||'');
       const qrScript='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-      const page='<!doctype html><html><head><meta charset="utf-8"><title>Invoice Alfa Prima Rent Car</title><style>body{font:11px Arial;padding:0;color:#172033;background:#fff}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{padding:5px;border:1px solid #bbb;text-align:left;vertical-align:top;white-space:normal!important;overflow-wrap:anywhere;word-break:normal;line-height:1.35}th{background:#eee}@page{size:A4 portrait;margin:10mm}</style><script src="'+qrScript+'"></scr'+'ipt></head><body>'+invoice+
-      '<script>(function(){function finish(){var el=document.getElementById("invoiceQrCode");var payload=el&&el.getAttribute("data-qr-payload");if(el&&payload&&window.QRCode){el.innerHTML="";new QRCode(el,{text:payload,width:88,height:88,colorDark:"#111111",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}else if(el){el.innerHTML="<span style=\\"font:9px Arial;color:#900\\">QR tidak dapat dimuat</span>";}setTimeout(function(){window.focus();window.print();},900);}if(document.readyState==="complete")finish();else window.addEventListener("load",finish);})();</scr'+'ipt></body></html>';
+      const page='<!doctype html><' + 'html><' + 'head><meta charset="utf-8"><title>Invoice Alfa Prima Rent Car</title><style>body{font:11px Arial;padding:0;color:#172033;background:#fff}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{padding:5px;border:1px solid #bbb;text-align:left;vertical-align:top;white-space:normal!important;overflow-wrap:anywhere;word-break:normal;line-height:1.35}th{background:#eee}@page{size:A4 portrait;margin:10mm}</style><' + 'script src="'+qrScript+'"><' + '/script><' + '/head><' + 'body>'+invoice+
+      '<' + 'script>(function(){function finish(){var el=document.getElementById("invoiceQrCode");var payload=el&&el.getAttribute("data-qr-payload");if(el&&payload&&window.QRCode){el.innerHTML="";new QRCode(el,{text:payload,width:88,height:88,colorDark:"#111111",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}else if(el){el.innerHTML="<span style=\\"font:9px Arial;color:#900\\">QR tidak dapat dimuat</span>";}setTimeout(function(){window.focus();window.print();},900);}if(document.readyState==="complete")finish();else window.addEventListener("load",finish);})();<' + '/script><' + '/body><' + '/html>';
       w.document.open();w.document.write(page);w.document.close();
     }catch(err){
       try{w.document.body.innerHTML='<h3>Gagal menampilkan invoice</h3><pre>'+String(err&&err.message||err)+'</pre>';}catch(_){}
@@ -3125,20 +3141,45 @@ function bindAuthForm(){
   form.onsubmit = async e => {
     e.preventDefault();
     const username = $('authUser')?.value.trim() || '', password = $('authPass')?.value || '';
+    const alertEl = $('authAlert');
+    if (alertEl) { alertEl.style.display = 'none'; alertEl.innerHTML = ''; }
+
     if (!username || !password) {
-      alert('Silakan masukkan username dan password.');
+      if (alertEl) {
+        alertEl.style.display = 'block';
+        alertEl.textContent = 'Silakan masukkan username dan password.';
+      } else {
+        alert('Silakan masukkan username dan password.');
+      }
       return;
     }
+    const submitBtn = $('authSubmitBtn');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Memverifikasi…'; }
     try {
       setSyncStatus('Memeriksa akun…', '#cbd5e1');
       const res = await apiCall('/api/login', 'POST', { username, password });
       currentUser = res.user;
       document.body.classList.remove('auth-required');
       if ($('authScreen')) $('authScreen').style.display = 'none';
-      await loadAppData();
+      if (res.db) {
+        applyLoadedData(res.db, res.user);
+      } else {
+        await loadAppData();
+      }
     } catch (err) {
-      alert('Login gagal: ' + err.message);
       setSyncStatus('Login gagal: ' + err.message, '#ffb3b3');
+      if (alertEl) {
+        alertEl.style.display = 'block';
+        let msgHtml = `<strong>Gagal Masuk:</strong><br>${esc(err.message)}`;
+        if (err.data && err.data.need_migrate && err.data.deploy_url) {
+          msgHtml += `<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #fca5a5"><a href="${esc(err.data.deploy_url)}" target="_blank" style="color:#b91c1c;font-weight:bold;text-decoration:underline">⚙ Buka Menu Deploy &amp; Migrasi Database →</a></div>`;
+        }
+        alertEl.innerHTML = msgHtml;
+      } else {
+        alert('Login gagal: ' + err.message);
+      }
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Login'; }
     }
   };
 }
@@ -3149,52 +3190,63 @@ function authView(mode){
   const content=$('authContent');
   if (content) {
     content.innerHTML=`<h3 style="margin-top:0;margin-bottom:14px;font-size:1.05rem;color:#e2e8f0">Masuk ke Aplikasi</h3>
+      <div id="authAlert" style="display:none;margin-bottom:14px;padding:10px 12px;border-radius:6px;background:#fef2f2;color:#991b1b;border:1px solid #fecaca;font-size:12px;line-height:1.45"></div>
       <form id="authForm">
         <div class="field"><label>Username</label><input id="authUser" required autocomplete="username" placeholder="Masukkan username"></div>
         <div class="field" style="margin-top:12px"><label>Password</label><input id="authPass" type="password" required autocomplete="current-password" placeholder="Masukkan password"></div>
-        <button class="btn primary" style="width:100%;margin-top:18px" type="submit">Login</button>
+        <button class="btn primary" style="width:100%;margin-top:18px" type="submit" id="authSubmitBtn">Login</button>
       </form>`;
     bindAuthForm();
   }
 }
 
-async function loadAppData(){
-  setSyncStatus('Mengambil data dari database MySQL…');
-  try {
-    const res = await apiCall('/api/load-data');
-    if (!res.user) {
-      currentUser = null;
-      document.body.classList.add('auth-required');
-      if ($('authScreen')) $('authScreen').style.display = 'flex';
-      authView('login');
-      setSyncStatus('Silakan login terlebih dahulu', '#cbd5e1');
-      return;
-    }
-    db = normalizeDb(res.db || {});
-    currentUser = res.user;
-    document.body.classList.remove('auth-required');
-    if ($('authScreen')) $('authScreen').style.display = 'none';
-    if ($('usersNav')) $('usersNav').classList.toggle('hidden', currentUser.role !== 'admin');
-    if ($('toolbarUsersNav')) $('toolbarUsersNav').classList.toggle('hidden', currentUser.role !== 'admin');
-    if ($('nikField')) $('nikField').classList.toggle('hidden', currentUser.role !== 'admin');
-    if ($('simField')) $('simField').classList.toggle('hidden', currentUser.role !== 'admin');
+function applyLoadedData(dbData, user){
+  if (user) currentUser = user;
+  db = normalizeDb(dbData || {});
+  document.body.classList.remove('auth-required');
+  if ($('authScreen')) $('authScreen').style.display = 'none';
 
-    $('eCar').innerHTML='<option value="">Biaya umum usaha</option>'+db.cars.map(a=>`<option value="${a.id}">${esc(a.jenis)} (${esc(a.plat)})</option>`).join('');
-    $('aPartner').innerHTML='<option value="">Pilih mitra (jika milik mitra)</option>'+db.partners.map(m=>`<option value="${m.id}">${esc(m.name)} (${m.id})</option>`).join('');
-    $('partnerRows').innerHTML=db.partners.map(m=>`<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${esc(m.wa)}</td><td>${esc(m.address)}</td><td>${esc(m.bank)}</td><td>${esc(m.accountNo)}</td></tr>`).join('')||'<tr><td colspan="6">Belum ada mitra.</td></tr>';
-    renderPartnerBookings();
-    renderPartnerPaymentSection();
-    $('journalRows').innerHTML=db.journals.map(j=>`<tr><td>${esc(j.id)}</td><td>${esc(j.date)}</td><td>${esc(j.note)}</td><td>${esc(j.debitAccount)}</td><td>${esc(j.creditAccount)}</td><td>${money(j.amount)}</td></tr>`).join('')||'<tr><td colspan="6">Belum ada jurnal manual.</td></tr>';
-    let jDebit=db.journals.reduce((s,j)=>s+Number(j.amount||0),0);$('jDebitTotal').textContent=money(jDebit);$('jCreditTotal').textContent=money(jDebit);
-    let ledger=[];db.payments.forEach(p=>{let b=book(p.bookingId),a=b?car(b.carId):null,amount=Number(p.amount||0);ledger.push({date:String(p.date||'').slice(0,10),account:'1101 Kas/Bank',note:'Penerimaan pelanggan '+p.bookingId,debit:amount,credit:0});if(a?.ownership==='mitra'){let shareTotal=Number(b.partnerRate??a.partnerRate??0)*Number(b.days||0);let sharePart=b.total>0?Math.min(amount,amount*shareTotal/b.total):0;ledger.push({date:String(p.date||'').slice(0,10),account:'2101 Utang Mitra',note:'Bagian pemilik '+p.bookingId,debit:0,credit:sharePart});ledger.push({date:String(p.date||'').slice(0,10),account:'4201 Pendapatan Margin Mitra',note:'Margin '+p.bookingId,debit:0,credit:amount-sharePart})}else{ledger.push({date:String(p.date||'').slice(0,10),account:'4101 Pendapatan Sewa',note:'Pendapatan sewa '+p.bookingId,debit:0,credit:amount})}});
+  if ($('usersNav')) $('usersNav').classList.toggle('hidden', currentUser?.role !== 'admin');
+  if ($('toolbarUsersNav')) $('toolbarUsersNav').classList.toggle('hidden', currentUser?.role !== 'admin');
+  if ($('nikField')) $('nikField').classList.toggle('hidden', currentUser?.role !== 'admin');
+  if ($('simField')) $('simField').classList.toggle('hidden', currentUser?.role !== 'admin');
+
+  try {
+    if ($('eCar')) $('eCar').innerHTML='<option value="">Biaya umum usaha</option>'+db.cars.map(a=>`<option value="${a.id}">${esc(a.jenis)} (${esc(a.plat)})</option>`).join('');
+    if ($('aPartner')) $('aPartner').innerHTML='<option value="">Pilih mitra (jika milik mitra)</option>'+db.partners.map(m=>`<option value="${m.id}">${esc(m.name)} (${m.id})</option>`).join('');
+    if ($('partnerRows')) $('partnerRows').innerHTML=db.partners.map(m=>`<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${esc(m.wa)}</td><td>${esc(m.address)}</td><td>${esc(m.bank)}</td><td>${esc(m.accountNo)}</td></tr>`).join('')||'<tr><td colspan="6">Belum ada mitra.</td></tr>';
+    if (typeof renderPartnerBookings === 'function') renderPartnerBookings();
+    if (typeof renderPartnerPaymentSection === 'function') renderPartnerPaymentSection();
+    if ($('journalRows')) $('journalRows').innerHTML=db.journals.map(j=>`<tr><td>${esc(j.id)}</td><td>${esc(j.date)}</td><td>${esc(j.note)}</td><td>${esc(j.debitAccount)}</td><td>${esc(j.creditAccount)}</td><td>${money(j.amount)}</td></tr>`).join('')||'<tr><td colspan="6">Belum ada jurnal manual.</td></tr>';
+    let jDebit=db.journals.reduce((s,j)=>s+Number(j.amount||0),0);
+    if ($('jDebitTotal')) $('jDebitTotal').textContent=money(jDebit);
+    if ($('jCreditTotal')) $('jCreditTotal').textContent=money(jDebit);
+
+    let ledger=[];
+    db.payments.forEach(p=>{
+      let b=book(p.bookingId),a=b?car(b.carId):null,amount=Number(p.amount||0);
+      ledger.push({date:String(p.date||'').slice(0,10),account:'1101 Kas/Bank',note:'Penerimaan pelanggan '+p.bookingId,debit:amount,credit:0});
+      if(a?.ownership==='mitra'){
+        let shareTotal=Number(b.partnerRate??a.partnerRate??0)*Number(b.days||0);
+        let sharePart=b.total>0?Math.min(amount,amount*shareTotal/b.total):0;
+        ledger.push({date:String(p.date||'').slice(0,10),account:'2101 Utang Mitra',note:'Bagian pemilik '+p.bookingId,debit:0,credit:sharePart});
+        ledger.push({date:String(p.date||'').slice(0,10),account:'4201 Pendapatan Margin Mitra',note:'Margin '+p.bookingId,debit:0,credit:amount-sharePart});
+      } else {
+        ledger.push({date:String(p.date||'').slice(0,10),account:'4101 Pendapatan Sewa',note:'Pendapatan sewa '+p.bookingId,debit:0,credit:amount});
+      }
+    });
     db.expenses.forEach(x=>{ledger.push({date:x.date,account:'5101 Beban Operasional',note:x.note||x.category,debit:x.amount,credit:0});ledger.push({date:x.date,account:'1101 Kas/Bank',note:x.note||x.category,debit:0,credit:x.amount})});
     db.driverPayments.forEach(p=>{ledger.push({date:p.date,account:'5102 Beban Honor Driver',note:'Pembayaran driver '+p.bookingId,debit:p.amount,credit:0});ledger.push({date:p.date,account:'1101 Kas/Bank',note:'Pembayaran driver '+p.bookingId,debit:0,credit:p.amount})});
     db.partnerPayments.forEach(p=>{ledger.push({date:p.date,account:'2101 Utang Mitra',note:'Pembayaran mitra '+p.bookingId,debit:p.amount,credit:0});ledger.push({date:p.date,account:'1101 Kas/Bank',note:'Pembayaran mitra '+p.bookingId,debit:0,credit:p.amount})});
     db.journals.forEach(j=>{ledger.push({date:j.date,account:j.debitAccount,note:j.note,debit:j.amount,credit:0});ledger.push({date:j.date,account:j.creditAccount,note:j.note,debit:0,credit:j.amount})});
-    ledger.sort((a,b)=>a.date.localeCompare(b.date));let balances={};$('ledgerRows').innerHTML=ledger.map(x=>{balances[x.account]=(balances[x.account]||0)+Number(x.debit||0)-Number(x.credit||0);return `<tr><td>${esc(x.date)}</td><td>${esc(x.account)}</td><td>${esc(x.note)}</td><td>${money(x.debit)}</td><td>${money(x.credit)}</td><td>${money(balances[x.account])}</td></tr>`}).join('')||'<tr><td colspan="6">Belum ada mutasi buku besar.</td></tr>';
+    ledger.sort((a,b)=>a.date.localeCompare(b.date));
+    let balances={};
+    if ($('ledgerRows')) $('ledgerRows').innerHTML=ledger.map(x=>{balances[x.account]=(balances[x.account]||0)+Number(x.debit||0)-Number(x.credit||0);return `<tr><td>${esc(x.date)}</td><td>${esc(x.account)}</td><td>${esc(x.note)}</td><td>${money(x.debit)}</td><td>${money(x.credit)}</td><td>${money(balances[x.account])}</td></tr>`}).join('')||'<tr><td colspan="6">Belum ada mutasi buku besar.</td></tr>';
+
     let carRows=db.cars.map(a=>{let inc=db.payments.filter(p=>book(p.bookingId)?.carId===a.id).reduce((s,p)=>s+Number(p.amount||0),0);let partnerShare=a.ownership==='mitra'?db.bookings.filter(b=>b.carId===a.id).reduce((s,b)=>s+Number(b.partnerRate??a.partnerRate??0)*Number(b.days||0),0):0;let partnerPaid=db.partnerPayments.filter(p=>db.bookings.find(b=>b.id===p.bookingId)?.carId===a.id).reduce((s,p)=>s+Number(p.amount||0),0);let direct=db.expenses.filter(x=>x.carId===a.id).reduce((s,x)=>s+Number(x.amount||0),0);let result=a.ownership==='mitra'?inc-partnerPaid-direct:inc-direct;return `<tr><td>${esc(a.jenis)} (${esc(a.plat)})</td><td>${a.ownership==='mitra'?'Mitra':'Sendiri'}</td><td>${money(inc)}</td><td>${money(a.ownership==='mitra'?partnerPaid:0)}</td><td>${money(direct)}</td><td>${money(result)}</td></tr>`}).join('');
-    $('carProfitRows').innerHTML=carRows||'<tr><td colspan="6">Belum ada kendaraan.</td></tr>';
-    let totalDriver=db.driverPayments.reduce((sum,p)=>sum+Number(p.amount||0),0);let totalIn=db.payments.reduce((s,p)=>s+Number(p.amount||0),0),totalPartner=db.partnerPayments.reduce((s,p)=>s+Number(p.amount||0),0),totalExp=db.expenses.reduce((s,x)=>s+Number(x.amount||0),0);$('overallProfit').textContent='Hasil kas usaha (seluruh periode): '+money(totalIn-totalPartner-totalExp-totalDriver);
+    if ($('carProfitRows')) $('carProfitRows').innerHTML=carRows||'<tr><td colspan="6">Belum ada kendaraan.</td></tr>';
+    let totalDriver=db.driverPayments.reduce((sum,p)=>sum+Number(p.amount||0),0);let totalIn=db.payments.reduce((s,p)=>s+Number(p.amount||0),0),totalPartner=db.partnerPayments.reduce((s,p)=>s+Number(p.amount||0),0),totalExp=db.expenses.reduce((s,x)=>s+Number(x.amount||0),0);
+    if ($('overallProfit')) $('overallProfit').textContent='Hasil kas usaha (seluruh periode): '+money(totalIn-totalPartner-totalExp-totalDriver);
     if($('invoiceMonth')&&!$('invoiceMonth').value)$('invoiceMonth').value=new Date().toISOString().slice(0,7);
     if($('reportMonth')&&!$('reportMonth').value)$('reportMonth').value=new Date().toISOString().slice(0,7);
 
@@ -3204,8 +3256,36 @@ async function loadAppData(){
     if ($('settingSigPreview')) $('settingSigPreview').src = db.settings?.signature_image || '/images/signature.png';
 
     render();
-    setSyncStatus('Login: '+currentUser.username+' ('+currentUser.role+') • MySQL tersambung ✓','#64c69a');
-    if(currentUser.role==='admin') renderUsers();
+    if(currentUser?.role==='admin') renderUsers();
+  } catch (renderErr) {
+    console.error('Render error:', renderErr);
+  }
+  setSyncStatus('Login: '+(currentUser?.username||'User')+' ('+(currentUser?.role||'') + ') • MySQL tersambung ✓','#64c69a');
+}
+
+async function loadAppData(){
+  setSyncStatus('Mengambil data dari database MySQL…');
+  try {
+    const res = await apiCall('/api/load-data');
+    if (res.need_migrate) {
+      authView('login');
+      const alertEl = $('authAlert');
+      if (alertEl) {
+        alertEl.style.display = 'block';
+        alertEl.innerHTML = `<strong>Database Belum Dimigrasi!</strong><br>${esc(res.message)}<div style="margin-top:8px"><a href="${esc(res.deploy_url || '/deploy?token=alfaprima-deploy')}" target="_blank" style="color:#b91c1c;font-weight:bold;text-decoration:underline">⚙ Klik Di Sini untuk Buka Halaman Deploy &amp; Migrasi →</a></div>`;
+      }
+      setSyncStatus('Database MySQL belum dimigrasi', '#ffb3b3');
+      return;
+    }
+    if (!res.user) {
+      currentUser = null;
+      document.body.classList.add('auth-required');
+      if ($('authScreen')) $('authScreen').style.display = 'flex';
+      authView('login');
+      setSyncStatus('Silakan login terlebih dahulu', '#cbd5e1');
+      return;
+    }
+    applyLoadedData(res.db, res.user);
   } catch (err) {
     setSyncStatus('Gagal mengambil data MySQL: ' + err.message, '#ffb3b3');
     alert('Gagal mengambil data MySQL: ' + err.message);
