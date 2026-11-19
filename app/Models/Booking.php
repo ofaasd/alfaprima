@@ -34,6 +34,9 @@ class Booking extends Model
         'status',
         'units_json',
         'created',
+        'signature_url',
+        'is_signed',
+        'signed_at',
     ];
 
     protected $appends = [
@@ -50,6 +53,9 @@ class Booking extends Model
         'lodgingCost',
         'unitsJson',
         'units',
+        'signatureUrl',
+        'isSigned',
+        'signedAt',
     ];
 
     protected function casts(): array
@@ -65,6 +71,8 @@ class Booking extends Model
             'meal_cost' => 'float',
             'lodging_cost' => 'float',
             'total' => 'float',
+            'is_signed' => 'boolean',
+            'signed_at' => 'datetime',
         ];
     }
 
@@ -137,6 +145,21 @@ class Booking extends Model
             }
         }
         return [];
+    }
+
+    public function getSignatureUrlAttribute()
+    {
+        return $this->attributes['signature_url'] ?? null;
+    }
+
+    public function getIsSignedAttribute(): bool
+    {
+        return (bool)($this->attributes['is_signed'] ?? false);
+    }
+
+    public function getSignedAtAttribute()
+    {
+        return $this->attributes['signed_at'] ?? null;
     }
 
     public function customer()

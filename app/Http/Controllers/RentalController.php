@@ -15,6 +15,7 @@ use App\Models\Account;
 use App\Models\Journal;
 use App\Models\DriverPayment;
 use App\Models\OtherCharge;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -74,6 +75,28 @@ class RentalController extends Controller
             ]);
         }
 
+        $settings = [];
+        try {
+            if (Schema::hasTable('settings')) {
+                $settings = Setting::pluck('value', 'key')->toArray();
+            }
+        } catch (\Throwable $e) {
+            $settings = [];
+        }
+
+        if (empty($settings['public_signature_url'])) {
+            $settings['public_signature_url'] = env('ALFA_PRIMA_PUBLIC_SIGNATURE_URL', 'https://script.google.com/macros/s/AKfycbwCUeqKQNhM_JrFvXKHilzIx9K7lSuY0fPyOuAIzfbr3W4MvYukFQWmRTIapE0ab9xYZA/exec');
+        }
+        if (empty($settings['signature_name'])) {
+            $settings['signature_name'] = 'Alfa Prima';
+        }
+        if (empty($settings['signature_title'])) {
+            $settings['signature_title'] = 'Pemilik';
+        }
+        if (empty($settings['signature_image'])) {
+            $settings['signature_image'] = '/images/signature.png';
+        }
+
         return response()->json([
             'success' => true,
             'user' => $user ? [
@@ -95,6 +118,7 @@ class RentalController extends Controller
                 'accounts' => Account::orderBy('code')->get(),
                 'driverPayments' => DriverPayment::orderBy('date', 'desc')->get(),
                 'otherCharges' => OtherCharge::orderBy('date', 'desc')->get(),
+                'settings' => $settings,
             ],
         ]);
     }
@@ -439,6 +463,9 @@ class RentalController extends Controller
                 'total' => $total,
                 'units_json' => $unitsJson,
                 'created' => $request->created ?: now()->toIso8601String(),
+                'signature_url' => $request->signature_url ?: ($request->signatureUrl ?: null),
+                'is_signed' => (bool) ($request->is_signed ?? $request->isSigned ?? false),
+                'signed_at' => $request->signed_at ?: ($request->signedAt ?: null),
             ]
         );
 
@@ -851,6 +878,9 @@ class RentalController extends Controller
                             'status' => $b['status'] ?? 'Belum Bayar',
                             'units_json' => $unitsJson,
                             'created' => $b['created'] ?? now()->toIso8601String(),
+                            'signature_url' => $b['signatureUrl'] ?? $b['signature_url'] ?? null,
+                            'is_signed' => (bool) (!empty($b['isSigned'] ?? $b['is_signed'])),
+                            'signed_at' => $b['signedAt'] ?? $b['signed_at'] ?? null,
                         ]
                     );
                 }
@@ -1015,6 +1045,15 @@ class RentalController extends Controller
                 }
                 if (!empty($ids)) {
                     DriverPayment::whereNotIn('id', $ids)->delete();
+                }
+            }
+
+            // 13. Settings
+            if (isset($data['settings']) && is_array($data['settings']) && Schema::hasTable('settings')) {
+                foreach ($data['settings'] as $k => $v) {
+                    if (is_string($k)) {
+                        Setting::set($k, is_string($v) ? $v : json_encode($v));
+                    }
                 }
             }
 
@@ -1201,6 +1240,99 @@ class RentalController extends Controller
         });
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Get signature verification URL and metadata.
+     */
+    public function getSignatureUrl()
+    {
+        $defaultUrl = env('ALFA_PRIMA_PUBLIC_SIGNATURE_URL', 'https://script.google.com/macros/s/AKfycbwCUeqKQNhM_JrFvXKHilzIx9K7lSuY0fPyOuAIzfbr3W4MvYukFQWmRTIapE0ab9xYZA/exec');
+        $url = Schema::hasTable('settings') ? Setting::get('public_signature_url', $defaultUrl) : $defaultUrl;
+        $name = Schema::hasTable('settings') ? Setting::get('signature_name', 'Alfa Prima') : 'Alfa Prima';
+        $title = Schema::hasTable('settings') ? Setting::get('signature_title', 'Pemilik') : 'Pemilik';
+        $image = Schema::hasTable('settings') ? Setting::get('signature_image', '/images/signature.png') : '/images/signature.png';
+
+        return response()->json([
+            'success' => true,
+            'url' => $url,
+            'signature_name' => $name,
+            'signature_title' => $title,
+            'signature_image' => $image,
+        ]);
+    }
+
+    /**
+     * Update application settings (Admin only).
+     */
+    public function saveSettings(Request $request)
+    {
+        if (Auth::user()?->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Hanya admin yang dapat mengubah pengaturan.'], 403);
+        }
+
+        $request->validate([
+            'public_signature_url' => 'nullable|string|max:1000',
+            'signature_name' => 'nullable|string|max:255',
+            'signature_title' => 'nullable|string|max:255',
+            'signature_image' => 'nullable|string',
+        ]);
+
+        if (Schema::hasTable('settings')) {
+            if ($request->has('public_signature_url')) {
+                Setting::set('public_signature_url', $request->input('public_signature_url'));
+            }
+            if ($request->has('signature_name')) {
+                Setting::set('signature_name', $request->input('signature_name'));
+            }
+            if ($request->has('signature_title')) {
+                Setting::set('signature_title', $request->input('signature_title'));
+            }
+            if ($request->has('signature_image')) {
+                Setting::set('signature_image', $request->input('signature_image'));
+            }
+        }
+
+        $all = Schema::hasTable('settings') ? Setting::pluck('value', 'key')->toArray() : [];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengaturan tanda tangan berhasil disimpan.',
+            'settings' => $all,
+        ]);
+    }
+
+    /**
+     * Upload custom signature image (Admin only).
+     */
+    public function uploadSignature(Request $request)
+    {
+        if (Auth::user()?->role !== 'admin') {
+            return response()->json(['success' => false, 'message' => 'Hanya admin yang dapat mengunggah tanda tangan.'], 403);
+        }
+
+        $request->validate([
+            'signature_file' => 'required|file|mimes:png,jpg,jpeg,webp,svg|max:5120',
+        ]);
+
+        $file = $request->file('signature_file');
+        $fileName = 'signature_' . time() . '.' . $file->getClientOriginalExtension();
+        $targetDir = public_path('images');
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0755, true);
+        }
+        $file->move($targetDir, $fileName);
+        $filePath = '/images/' . $fileName;
+
+        if (Schema::hasTable('settings')) {
+            Setting::set('signature_image', $filePath);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'File gambar tanda tangan berhasil diunggah.',
+            'path' => $filePath,
+        ]);
     }
 }
 

@@ -207,5 +207,64 @@ class RentalTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Output Terminal Konsol');
     }
+
+    public function test_signature_url_endpoint(): void
+    {
+        $response = $this->getJson('/api/signature-url');
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+        ]);
+        $this->assertNotEmpty($response->json('url'));
+    }
+
+    public function test_save_signature_settings_as_admin(): void
+    {
+        $admin = User::first();
+        $response = $this->actingAs($admin)->postJson('/api/settings', [
+            'public_signature_url' => 'https://custom-signature.test/verify',
+            'signature_name' => 'Budi Santoso',
+            'signature_title' => 'Direktur Utama',
+            'signature_image' => '/images/custom_signature.png',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true]);
+        $this->assertDatabaseHas('settings', [
+            'key' => 'signature_name',
+            'value' => 'Budi Santoso',
+        ]);
+    }
+
+    public function test_save_settings_forbidden_for_guest(): void
+    {
+        $response = $this->postJson('/api/settings', [
+            'signature_name' => 'Hacker',
+        ]);
+
+        $response->assertStatus(403);
+    }
+
+    public function test_booking_with_signature_fields(): void
+    {
+        $admin = User::first();
+
+        $response = $this->actingAs($admin)->postJson('/api/bookings', [
+            'customer_id' => 'PLG-0001',
+            'car_id' => 'ARM-0005',
+            'start' => '2027-01-10',
+            'end' => '2027-01-11',
+            'days' => 2,
+            'rate' => 1500000,
+            'signature_url' => 'https://custom.test/sign/BKG-0001',
+            'is_signed' => true,
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('bookings', [
+            'signature_url' => 'https://custom.test/sign/BKG-0001',
+            'is_signed' => 1,
+        ]);
+    }
 }
 

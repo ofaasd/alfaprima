@@ -1249,6 +1249,42 @@ main{padding-left:178px!important;padding-right:14px!important}
   <div class="notice">Admin memiliki akses penuh. Karyawan dapat memasukkan dan mengubah transaksi, tetapi tidak dapat menghapus data atau membuat akun.</div>
 </div>
 <div class="card" style="margin-top:14px"><h3>Daftar Akun</h3><div class="tablewrap"><table><thead><tr><th>Username</th><th>Peran</th><th>Status</th><th class="no-print">Aksi</th></tr></thead><tbody id="userRows"></tbody></table></div></div>
+<div class="card no-print" style="margin-top:14px">
+  <h3>Pengaturan Tanda Tangan &amp; QR Code Dokumen</h3>
+  <form id="signatureSettingForm" onsubmit="saveSignatureSettings(event)">
+    <div class="formgrid">
+      <div class="field" style="grid-column:1/-1">
+        <label>URL Verifikasi / Tanda Tangan Publik (Payload QR Code)</label>
+        <input id="settingSigUrl" type="url" placeholder="https://..." required>
+        <small class="muted" style="display:block;margin-top:4px">URL ini akan dijadikan kode QR di invoice terpilih untuk verifikasi penandatanganan.</small>
+      </div>
+      <div class="field">
+        <label>Nama Penanda Tangan</label>
+        <input id="settingSigName" placeholder="Contoh: Alfa Prima" required>
+      </div>
+      <div class="field">
+        <label>Jabatan Penanda Tangan</label>
+        <input id="settingSigTitle" placeholder="Contoh: Pemilik" required>
+      </div>
+      <div class="field" style="grid-column:1/-1">
+        <label>Gambar Tanda Tangan (Invoice Bulanan)</label>
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px">
+          <div style="border:1px dashed #ccc;padding:8px;border-radius:6px;background:#fafafa;min-width:160px;min-height:60px;display:flex;align-items:center;justify-content:center">
+            <img id="settingSigPreview" src="/images/signature.png" alt="Preview Tanda Tangan" style="max-height:55px;max-width:180px;object-fit:contain">
+          </div>
+          <div>
+            <input type="file" id="settingSigFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="previewSignatureUpload(this)">
+            <div class="muted" style="font-size:11px;margin-top:4px">Format: PNG transparan disarankan. Maksimal 5MB.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:14px;gap:8px">
+      <button class="btn primary" type="submit">Simpan Pengaturan Tanda Tangan</button>
+      <button class="btn" type="button" onclick="resetDefaultSignature()">Gunakan Tanda Tangan Bawaan</button>
+    </div>
+  </form>
+</div>
 </section>
 <section id="laporan" class="hidden">
 <div class="toolbar"><h2>Laporan</h2><div class="actions no-print"><button class="btn" onclick="printReport()">Cetak Laporan</button><button class="btn" onclick="backup()">Backup JSON</button><label class="btn" style="cursor:pointer">Pulihkan JSON<input type="file" id="restoreFile" accept=".json,application/json" hidden></label></div></div>
@@ -2835,7 +2871,10 @@ function invoiceHtmlForCustomer(customerId,month,bookingIds=null){
       <td>${esc(u.destination||'-')}</td><td>${duration} hari</td>
       <td>${detailLines.join('<br><small>')}</td><td><b>${money(u.total||0)}</b></td></tr>`;
   })).join('')+list.map(b=>chargesForBooking(b.id).map(ch=>`<tr><td><small>${formatDateDMY(b.start)} s.d. ${formatDateDMY(b.end)}<br>${esc(b.id)}</small></td><td>Biaya Lain-lain</td><td>-</td><td>-</td><td>${esc(ch.description||'Biaya lain-lain')}</td><td><b>${money(ch.amount||0)}</b></td></tr>`).join('')).join('');
-  return `<div style="max-width:760px;margin:auto;padding:22px;color:#172033;background:#fff;font-family:Arial,sans-serif;border:1px solid #ddd">
+    const sigImg = (db.settings && db.settings.signature_image) ? db.settings.signature_image : '/images/signature.png';
+    const sigName = (db.settings && db.settings.signature_name) ? esc(db.settings.signature_name) : 'Alfa Prima';
+    const sigTitle = (db.settings && db.settings.signature_title) ? esc(db.settings.signature_title) : 'Pemilik';
+    return `<div style="max-width:760px;margin:auto;padding:22px;color:#172033;background:#fff;font-family:Arial,sans-serif;border:1px solid #ddd">
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding-bottom:12px;border-bottom:3px solid #b18a3b">
       <div style="font-size:18px;font-weight:800;letter-spacing:1px;color:#17243a;white-space:nowrap">ALFA PRIMA RENTCAR</div>
       <div style="text-align:right;font-size:10px;line-height:1.5">Harmony Residence C16, Sendang Mulyo,<br>Tembalang, Semarang<br>Instagram: @alfaprima.rentcar<br>WhatsApp: 081226611507</div>
@@ -2851,7 +2890,11 @@ function invoiceHtmlForCustomer(customerId,month,bookingIds=null){
         Lakukan Konfirmasi dan kirim bukti transfer bila telah transfer ke nomor rekening tersebut
       </div>
       <div style="width:190px;text-align:center;font-size:11px;flex-shrink:0">
-        <div>Hormat kami,</div><div style="font-weight:bold;margin-top:4px">ALFA PRIMA RENTCAR</div><div style="height:52px"></div><div style="border-top:1px solid #333;padding-top:6px;font-weight:bold">Alfa Prima</div><div>Pemilik</div>
+        <div>Hormat kami,</div>
+        <div style="font-weight:bold;margin-top:4px">ALFA PRIMA RENTCAR</div>
+        <img alt="Tanda tangan Alfa Prima" src="${sigImg}" style="display:block;width:145px;height:52px;object-fit:contain;margin:3px auto 0">
+        <div style="border-top:1px solid #333;padding-top:4px;font-weight:bold">${sigName}</div>
+        <div>${sigTitle}</div>
       </div>
     </div>
     <p style="text-align:center;font-size:10px;margin:14px 0 0">Terima kasih telah menggunakan layanan Alfa Prima Rent Car.</p>
@@ -2875,7 +2918,7 @@ function getSequentialInvoiceNumber(list){
     return 'INV-'+dateKey+'-'+String(Date.now()).slice(-6);
   }
 }
-function invoiceHtmlForBookings(list){
+function invoiceHtmlForBookings(list, signatureUrl){
   const invoiceNumber=getSequentialInvoiceNumber(list);
   const uniqueInvoiceBookings=[...new Map((list||[]).map(b=>[String(b.id||''),b])).values()];
   const totalFleetCount=uniqueInvoiceBookings.reduce((sum,b)=>sum+bookingUnitsOf(b).length,0);
@@ -2885,6 +2928,9 @@ function invoiceHtmlForBookings(list){
   const allFullyPaid=list.length>0&&list.every(b=>statusBook(b)==='Lunas');
   const hasAnyPayment=totalPaid>0;
   const documentTitle=allFullyPaid?'NOTA LUNAS':(hasAnyPayment?'NOTA PEMBAYARAN':'INVOICE');
+  const sigName = (db.settings && db.settings.signature_name) ? esc(db.settings.signature_name) : 'Alfa Prima';
+  const sigTitle = (db.settings && db.settings.signature_title) ? esc(db.settings.signature_title) : 'Pemilik';
+  const invoiceQrPayload = String(signatureUrl || (db.settings && db.settings.public_signature_url) || '');
   const grouped=new Map();
   uniqueInvoiceBookings.forEach(b=>{
     const cid=String(b.customerId||'Tanpa ID');
@@ -2947,7 +2993,7 @@ function invoiceHtmlForBookings(list){
     </div>
     <table class="alfa-invoice-detail-table" style="width:100%;border-collapse:collapse;font-size:8.5px;line-height:1.35;color:#172033;table-layout:fixed;overflow-wrap:anywhere"><colgroup><col style="width:4%"><col style="width:16%"><col style="width:16%"><col style="width:10%"><col style="width:6%"><col style="width:35%"><col style="width:13%"></colgroup><thead><tr style="background:#f1eee7"><th>No.</th><th>Waktu &amp; Tanggal</th><th>Armada</th><th>Tujuan</th><th>Durasi</th><th>Rincian Biaya</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
     <div style="margin-left:auto;max-width:300px;margin-top:14px;text-align:right"><div style="font-size:15px;margin-top:7px;padding:8px;border-top:2px solid #b18a3b">TOTAL: <b>${money(total)}</b></div>${paymentSummary}</div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-top:20px">${transferInfo}<div style="width:190px;text-align:center;font-size:11px"><div>Hormat kami,</div><div style="font-weight:bold;margin-top:4px">ALFA PRIMA RENTCAR</div><div style="height:52px"></div><div style="border-top:1px solid #333;padding-top:6px;font-weight:bold">Alfa Prima</div><div>Pemilik</div></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin-top:20px"><div style="flex:1;min-width:0">${transferInfo}</div><div style="width:190px;text-align:center;font-size:10px;flex:0 0 190px"><div>Hormat kami,</div><div style="font-weight:bold;margin-top:3px">ALFA PRIMA RENTCAR</div><div id="invoiceQrCode" data-qr-payload="${esc(invoiceQrPayload)}" style="width:88px;height:88px;margin:6px auto 3px;display:flex;align-items:center;justify-content:center"></div><div style="font-size:8px;color:#555;margin-bottom:4px">Scan untuk verifikasi invoice &amp; penanda tangan</div><div style="border-top:1px solid #333;padding-top:4px;font-weight:bold">${sigName}</div><div>${sigTitle}</div></div></div>
     <p style="text-align:center;font-size:10px;margin:14px 0 0">Terima kasih telah menggunakan layanan Alfa Prima Rent Car.</p></div>`;
 }
 function toggleBookingCustomer(master){
@@ -2977,14 +3023,32 @@ function syncBookingCustomerCheck(box){
   if(master)master.checked=boxes.length>0&&boxes.every(item=>item.checked);
 }
 function printSelectedInvoices(){
-  const ids=[...document.querySelectorAll('.invoice-book-check:checked')].map(el=>el.value);
+  const ids=[...document.querySelectorAll('.invoice-book-check:checked')].map(el=>String(el.value));
   if(!ids.length){alert('Pilih minimal satu ID Booking untuk dicetak.');return;}
-  const selected=db.bookings.filter(b=>ids.includes(b.id));
-  const invoice=invoiceHtmlForBookings(selected);
+  const selected=(db.bookings||[]).filter(b=>ids.includes(String(b.id)));
+  if(!selected.length){alert('Data booking yang dipilih tidak ditemukan.');return;}
   const w=window.open('','_blank');
-  if(!w){alert('Izinkan pop-up browser untuk mencetak invoice.');return;}
-  w.document.write('<html><head><title>Dokumen Booking Terpilih</title><style>body{font:11px Arial;padding:0;color:#172033}table{width:100%;border-collapse:collapse}th,td{padding:5px;border:1px solid #bbb;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#eee}@page{size: A4 portrait;margin:10mm}</style><' + '/head><body>'+invoice+'<' + '/body><' + '/html>');
-  w.document.close();w.onload=()=>{w.focus();w.print()};setTimeout(()=>{w.focus();w.print()},1000);
+  if(!w){alert('Pop-up diblokir. Izinkan pop-up untuk Alfa Prima Rent Car.');return;}
+
+  const customSigBooking = selected.find(b => b.signatureUrl || b.signature_url);
+  const sigUrl = (customSigBooking && (customSigBooking.signatureUrl || customSigBooking.signature_url)) ||
+                 (db.settings && db.settings.public_signature_url) ||
+                 'https://script.google.com/macros/s/AKfycbwCUeqKQNhM_JrFvXKHilzIx9K7lSuY0fPyOuAIzfbr3W4MvYukFQWmRTIapE0ab9xYZA/exec';
+
+  const renderInvoice=(signatureUrl)=>{
+    try{
+      const invoice=invoiceHtmlForBookings(selected,signatureUrl||'');
+      const qrScript='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+      const page='<!doctype html><html><head><meta charset="utf-8"><title>Invoice Alfa Prima Rent Car</title><style>body{font:11px Arial;padding:0;color:#172033;background:#fff}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{padding:5px;border:1px solid #bbb;text-align:left;vertical-align:top;white-space:normal!important;overflow-wrap:anywhere;word-break:normal;line-height:1.35}th{background:#eee}@page{size:A4 portrait;margin:10mm}</style><script src="'+qrScript+'"></scr'+'ipt></head><body>'+invoice+
+      '<script>(function(){function finish(){var el=document.getElementById("invoiceQrCode");var payload=el&&el.getAttribute("data-qr-payload");if(el&&payload&&window.QRCode){el.innerHTML="";new QRCode(el,{text:payload,width:88,height:88,colorDark:"#111111",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}else if(el){el.innerHTML="<span style=\\"font:9px Arial;color:#900\\">QR tidak dapat dimuat</span>";}setTimeout(function(){window.focus();window.print();},900);}if(document.readyState==="complete")finish();else window.addEventListener("load",finish);})();</scr'+'ipt></body></html>';
+      w.document.open();w.document.write(page);w.document.close();
+    }catch(err){
+      try{w.document.body.innerHTML='<h3>Gagal menampilkan invoice</h3><pre>'+String(err&&err.message||err)+'</pre>';}catch(_){}
+      alert('Gagal menampilkan invoice: '+(err&&err.message||err));
+    }
+  };
+
+  renderInvoice(sigUrl);
 }
 function showInvoice(){let id=$('invoicePick').value,month=$('invoiceMonth').value;$('invoicePreview').innerHTML=id?invoiceHtmlForCustomer(id,month):''}
 
@@ -3034,12 +3098,26 @@ function clearAll(){if(currentUser?.role!=='admin'){alert('Hanya admin yang dapa
 ['qCust','qCar','qBook'].forEach(id=>$(id).addEventListener('input',render));
 $('qUnpaidCustomer')?.addEventListener('input',render);
 function normalizeDb(data){
-  return {customers:Array.isArray(data.customers)?data.customers:[],
-          cars:Array.isArray(data.cars)?data.cars:[],
-          bookings:Array.isArray(data.bookings)?data.bookings:[],
-          payments:Array.isArray(data.payments)?data.payments:[],
-          otherCharges:Array.isArray(data.otherCharges)?data.otherCharges:[],
-          expenses:Array.isArray(data.expenses)?data.expenses:[],partners:Array.isArray(data.partners)?data.partners:[],partnerPayments:Array.isArray(data.partnerPayments)?data.partnerPayments:[],accounts:Array.isArray(data.accounts)?data.accounts:[],journals:Array.isArray(data.journals)?data.journals:[],drivers:Array.isArray(data.drivers)?data.drivers:[],driverPayments:Array.isArray(data.driverPayments)?data.driverPayments:[]};
+  return {
+    customers:Array.isArray(data.customers)?data.customers:[],
+    cars:Array.isArray(data.cars)?data.cars:[],
+    bookings:Array.isArray(data.bookings)?data.bookings:[],
+    payments:Array.isArray(data.payments)?data.payments:[],
+    otherCharges:Array.isArray(data.otherCharges)?data.otherCharges:[],
+    expenses:Array.isArray(data.expenses)?data.expenses:[],
+    partners:Array.isArray(data.partners)?data.partners:[],
+    partnerPayments:Array.isArray(data.partnerPayments)?data.partnerPayments:[],
+    accounts:Array.isArray(data.accounts)?data.accounts:[],
+    journals:Array.isArray(data.journals)?data.journals:[],
+    drivers:Array.isArray(data.drivers)?data.drivers:[],
+    driverPayments:Array.isArray(data.driverPayments)?data.driverPayments:[],
+    settings:(data.settings && typeof data.settings==='object')?data.settings:{
+      public_signature_url:'https://script.google.com/macros/s/AKfycbwCUeqKQNhM_JrFvXKHilzIx9K7lSuY0fPyOuAIzfbr3W4MvYukFQWmRTIapE0ab9xYZA/exec',
+      signature_name:'Alfa Prima',
+      signature_title:'Pemilik',
+      signature_image:'/images/signature.png'
+    }
+  };
 }
 function bindAuthForm(){
   const form = $('authForm');
@@ -3120,6 +3198,11 @@ async function loadAppData(){
     if($('invoiceMonth')&&!$('invoiceMonth').value)$('invoiceMonth').value=new Date().toISOString().slice(0,7);
     if($('reportMonth')&&!$('reportMonth').value)$('reportMonth').value=new Date().toISOString().slice(0,7);
 
+    if ($('settingSigUrl')) $('settingSigUrl').value = db.settings?.public_signature_url || '';
+    if ($('settingSigName')) $('settingSigName').value = db.settings?.signature_name || 'Alfa Prima';
+    if ($('settingSigTitle')) $('settingSigTitle').value = db.settings?.signature_title || 'Pemilik';
+    if ($('settingSigPreview')) $('settingSigPreview').src = db.settings?.signature_image || '/images/signature.png';
+
     render();
     setSyncStatus('Login: '+currentUser.username+' ('+currentUser.role+') • MySQL tersambung ✓','#64c69a');
     if(currentUser.role==='admin') renderUsers();
@@ -3161,6 +3244,108 @@ async function toggleUser(id,active){
     await renderUsers();
   } catch (e) {
     alert('Gagal mengubah status akun: ' + e.message);
+  }
+}
+
+async function saveSignatureSettings(e) {
+  if (e) e.preventDefault();
+  if (currentUser?.role !== 'admin') {
+    alert('Hanya admin yang dapat mengubah pengaturan tanda tangan.');
+    return;
+  }
+  const url = $('settingSigUrl')?.value.trim();
+  const name = $('settingSigName')?.value.trim();
+  const title = $('settingSigTitle')?.value.trim();
+  const fileInput = $('settingSigFile');
+
+  let imagePath = db.settings?.signature_image || '/images/signature.png';
+
+  if (fileInput && fileInput.files && fileInput.files[0]) {
+    const formData = new FormData();
+    formData.append('signature_file', fileInput.files[0]);
+    formData.append('_token', csrfToken());
+    try {
+      setSyncStatus('Mengunggah gambar tanda tangan…', '#f59e0b');
+      const uploadRes = await fetch('/api/upload-signature', {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+      });
+      const uploadJson = await uploadRes.json();
+      if (!uploadRes.ok || !uploadJson.success) {
+        alert(uploadJson.message || 'Gagal mengunggah file tanda tangan.');
+        return;
+      }
+      imagePath = uploadJson.path;
+      if ($('settingSigPreview')) $('settingSigPreview').src = imagePath;
+    } catch (err) {
+      alert('Error saat mengunggah gambar: ' + (err.message || err));
+      return;
+    }
+  }
+
+  const payload = {
+    public_signature_url: url,
+    signature_name: name,
+    signature_title: title,
+    signature_image: imagePath
+  };
+
+  try {
+    setSyncStatus('Menyimpan pengaturan tanda tangan…', '#f59e0b');
+    const res = await apiCall('/api/settings', 'POST', payload);
+    if (res.success) {
+      db.settings = res.settings || payload;
+      alert('Pengaturan tanda tangan berhasil disimpan.');
+      setSyncStatus('Tersimpan di server', '#10b981');
+    }
+  } catch (err) {
+    alert('Gagal menyimpan pengaturan: ' + (err.message || err));
+  }
+}
+
+function previewSignatureUpload(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      if ($('settingSigPreview')) $('settingSigPreview').src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+async function resetDefaultSignature() {
+  if (currentUser?.role !== 'admin') {
+    alert('Hanya admin yang dapat mengatur tanda tangan.');
+    return;
+  }
+  if (!confirm('Kembalikan tanda tangan ke bawaan sistem Alfa Prima?')) return;
+  const defaultUrl = 'https://script.google.com/macros/s/AKfycbwCUeqKQNhM_JrFvXKHilzIx9K7lSuY0fPyOuAIzfbr3W4MvYukFQWmRTIapE0ab9xYZA/exec';
+  const defaultName = 'Alfa Prima';
+  const defaultTitle = 'Pemilik';
+  const defaultImg = '/images/signature.png';
+
+  if ($('settingSigUrl')) $('settingSigUrl').value = defaultUrl;
+  if ($('settingSigName')) $('settingSigName').value = defaultName;
+  if ($('settingSigTitle')) $('settingSigTitle').value = defaultTitle;
+  if ($('settingSigPreview')) $('settingSigPreview').src = defaultImg;
+  if ($('settingSigFile')) $('settingSigFile').value = '';
+
+  const payload = {
+    public_signature_url: defaultUrl,
+    signature_name: defaultName,
+    signature_title: defaultTitle,
+    signature_image: defaultImg
+  };
+
+  try {
+    const res = await apiCall('/api/settings', 'POST', payload);
+    if (res.success) {
+      db.settings = res.settings || payload;
+      alert('Tanda tangan telah dikembalikan ke bawaan.');
+    }
+  } catch (err) {
+    alert('Gagal mereset tanda tangan: ' + (err.message || err));
   }
 }
 

@@ -47,6 +47,11 @@ Route::post('/api/accounts', [RentalController::class, 'saveAccount']);
 Route::post('/api/journals', [RentalController::class, 'saveJournal']);
 Route::post('/api/save-all', [RentalController::class, 'saveAll']);
 
+// Settings & Signature
+Route::get('/api/signature-url', [RentalController::class, 'getSignatureUrl']);
+Route::post('/api/settings', [RentalController::class, 'saveSettings']);
+Route::post('/api/upload-signature', [RentalController::class, 'uploadSignature']);
+
 // Utilities: Backup, Restore, Export, Clear All
 Route::get('/api/backup', [RentalController::class, 'backupJson']);
 Route::post('/api/restore', [RentalController::class, 'restoreJson']);
