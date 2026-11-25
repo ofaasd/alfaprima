@@ -1067,6 +1067,170 @@ main{padding-left:178px!important;padding-right:14px!important}
   box-shadow:1px 0 0 var(--line);
 }
 
+
+/* Form Database Mitra: lebar kolom disesuaikan untuk maksimal 25 karakter */
+#mitra .card.no-print:has(#partnerForm){
+  width:max-content;
+  max-width:100%;
+  padding:10px;
+}
+#mitra #partnerForm{width:max-content;max-width:100%}
+#mitra #partnerForm > .formgrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,190px));
+  width:max-content;
+  max-width:100%;
+  gap:7px 9px;
+  margin:0;
+}
+#mitra #partnerForm .field{width:190px;max-width:100%;min-width:0}
+#mitra #partnerForm input{
+  width:100%;
+  height:29px;
+  min-height:29px;
+  padding:5px 7px;
+  font-size:10px;
+}
+#mitra #partnerForm > .row{
+  width:190px;
+  max-width:100%;
+  margin-top:8px!important;
+}
+#mitra #partnerForm > .row button{width:100%;min-height:26px;padding:5px 8px;font-size:10px}
+@media(max-width:650px){
+  #mitra #partnerForm > .formgrid{grid-template-columns:repeat(2,minmax(0,190px))}
+}
+@media(max-width:420px){
+  #mitra #partnerForm > .formgrid{grid-template-columns:minmax(0,190px)}
+}
+
+/* Form Database Mitra Kendaraan: ringkas dan ramping */
+#mitra #partnerForm{
+  padding:10px !important;
+}
+#mitra #partnerForm .formgrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  column-gap:9px;
+  row-gap:7px;
+}
+#mitra #partnerForm .field label{
+  font-size:9px;
+  line-height:1.2;
+  margin:0 0 3px;
+}
+#mitra #partnerForm input,
+#mitra #partnerForm select,
+#mitra #partnerForm textarea{
+  height:29px;
+  min-height:29px;
+  padding:5px 8px;
+  font-size:10.5px;
+  border-radius:7px;
+}
+#mitra #partnerForm .row{
+  margin-top:8px !important;
+}
+#mitra #partnerForm button[type="submit"],
+#mitra #partnerForm button{
+  min-height:27px;
+  height:27px;
+  padding:4px 10px;
+  font-size:10px;
+  border-radius:7px;
+}
+@media(max-width:700px){
+  #mitra #partnerForm .formgrid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+  }
+}
+@media(max-width:440px){
+  #mitra #partnerForm .formgrid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* Daftar Mitra: lebar sejajar dengan form, kolom rapat, tombol aksi */
+#mitra > .card.no-print:has(#partnerForm),
+#mitra > .card:has(#partnerRows){
+  width:max-content;
+  max-width:100%;
+  box-sizing:border-box;
+}
+#mitra > .card:has(#partnerRows) .tablewrap{width:100%;max-width:100%;overflow-x:auto}
+#mitra > .card:has(#partnerRows) table{
+  width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:10px
+}
+#mitra > .card:has(#partnerRows) th,
+#mitra > .card:has(#partnerRows) td{
+  padding:6px 7px;font-size:10px;line-height:1.25;white-space:normal;overflow-wrap:anywhere
+}
+#mitra > .card:has(#partnerRows) th:nth-child(1){width:11%}
+#mitra > .card:has(#partnerRows) th:nth-child(2){width:14%}
+#mitra > .card:has(#partnerRows) th:nth-child(3){width:16%}
+#mitra > .card:has(#partnerRows) th:nth-child(4){width:20%}
+#mitra > .card:has(#partnerRows) th:nth-child(5){width:10%}
+#mitra > .card:has(#partnerRows) th:nth-child(6){width:14%}
+#mitra > .card:has(#partnerRows) th:nth-child(7){width:15%}
+#mitra #partnerRows .actions{display:flex;gap:4px;flex-wrap:nowrap;white-space:nowrap}
+#mitra #partnerRows .btn.small{min-height:22px;padding:3px 6px;font-size:9px;line-height:1.2}
+@media(max-width:560px){
+ #mitra > .card:has(#partnerRows) table{min-width:560px}
+}
+
+/* Profit mitra: ringkas, statistik sebaris, rincian dalam popup floating */
+#mitra .partner-profit-card{width:100%;max-width:100%;padding:12px}
+#mitra .partner-profit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:9px}
+#mitra .partner-profit-title{margin:0;color:var(--gold);font-size:14px;font-weight:800;padding:3px 0}
+#mitra .partner-profit-filter{width:180px;max-width:100%;margin:0}
+#mitra .partner-profit-filter label{font-size:10px;margin-bottom:3px}
+#mitra .partner-profit-filter input{height:30px;padding:4px 8px;font-size:11px}
+#mitra .partner-profit-stats{display:flex;align-items:stretch;gap:7px;flex-wrap:wrap}
+#mitra .partner-profit-stats>.stat{flex:0 1 auto;width:max-content;min-width:155px;max-width:100%;padding:7px 10px;min-height:52px;text-align:left;cursor:default}
+#mitra .partner-profit-stats>.stat small{display:block;font-size:9px;line-height:1.2;white-space:nowrap;color:var(--muted)}
+#mitra .partner-profit-stats>.stat strong{display:block;font-size:15px;line-height:1.2;margin-top:3px;color:var(--gold);white-space:nowrap}
+#mitra .partner-profit-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+#mitra .partner-profit-actions .btn{font-size:10px;padding:5px 9px;min-height:26px}
+.partner-profit-modal{position:fixed;inset:0;z-index:3000;background:rgba(2,8,18,.72);display:flex;align-items:center;justify-content:center;padding:18px}
+.partner-profit-modal.hidden{display:none!important}
+.partner-profit-dialog{width:min(760px,96vw);max-height:82vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px;box-shadow:0 18px 55px #0009}
+.partner-profit-dialog-wide{width:min(1120px,97vw)}
+.partner-profit-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.partner-profit-dialog-head h3{margin:0;color:var(--gold)}
+.partner-profit-dialog .tablewrap{max-width:100%;overflow:auto}
+.partner-profit-dialog table{min-width:620px}
+.partner-profit-modal-stats{margin-top:12px}
+#mitra .partner-profit-actions .btn{white-space:nowrap}
+@media(max-width:600px){#mitra .partner-profit-stats>.stat{flex:1 1 100%;width:100%;min-width:0}.partner-profit-modal{padding:8px}.partner-profit-dialog{width:100%;max-height:88vh;padding:11px}}
+
+/* Klasemen armada mitra bergaya tabel liga */
+#mitra .partner-top-fleet{max-width:100%}
+#mitra .partner-league-row{display:flex;align-items:center;gap:10px;padding:7px 9px;border-bottom:1px solid var(--line);font-size:10px}
+#mitra .partner-league-row:last-child{border-bottom:0}
+#mitra .partner-league-rank{width:22px;height:22px;flex:0 0 22px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:#24334b;color:var(--gold);font-size:11px}
+#mitra .partner-league-team{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+#mitra .partner-league-team strong{font-size:10px;color:var(--text)}
+#mitra .partner-league-team small{font-size:9px;color:var(--muted)}
+#mitra .partner-league-days{min-width:64px;text-align:right;color:var(--gold);font-size:13px}
+#mitra .partner-league-days small{font-size:9px;color:var(--muted);font-weight:400}
+
+/* Tombol formulir mitra dan klasemen di kontainer profit */
+#mitra #partnerForm .partner-form-bottom{display:flex;justify-content:flex-start;margin-top:9px}
+#mitra #partnerForm .partner-form-actions{display:grid;grid-template-columns:190px 190px;gap:7px;min-width:0}
+#mitra #partnerForm .partner-list-button{width:100%;min-height:34px;padding:6px 9px;font-size:10px}
+#mitra #partnerForm .partner-save-button{width:100%;height:auto;min-height:34px}
+#mitra .partner-top-fleet-profit{margin-top:12px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:var(--panel2)}
+#mitra .partner-top-fleet-profit .partner-top-fleet-heading{font-size:10px;color:var(--muted);margin-bottom:6px;font-weight:700}
+#mitra .partner-top-fleet-profit .partner-league-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+#mitra .partner-top-fleet-profit .partner-league-row{min-width:0;gap:7px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.02)}
+#mitra .partner-top-fleet-profit .partner-league-rank{background:transparent;font-size:17px}
+#mitra .partner-top-fleet-profit .partner-league-team strong{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mitra .partner-top-fleet-profit .partner-league-team small{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mitra .partner-top-fleet-profit .partner-league-days{min-width:48px;font-size:12px}
+#mitra .partner-top-fleet-profit .partner-league-days small{font-size:9px}
+@media(max-width:650px){#mitra #partnerForm .partner-form-actions{grid-template-columns:1fr 1fr;width:100%}#mitra #partnerForm .partner-save-button,#mitra #partnerForm .partner-list-button{min-height:32px}#mitra .partner-top-fleet-profit .partner-league-list{grid-template-columns:1fr}}
+
 </style></head>
 <body class="auth-required">
 <div id="authScreen" style="position:fixed;inset:0;z-index:1000;background:#0b1220;display:flex;align-items:center;justify-content:center;padding:18px">
@@ -1159,7 +1323,7 @@ main{padding-left:178px!important;padding-right:14px!important}
 <div id="fleetBookingCustomerInfo" class="card fleet-booking-customer-info" aria-live="polite">
   <div class="fleet-customer-info-heading">
     <h3 id="fleetBookingInfoTitle">Informasi Pengiriman</h3>
-    <button type="button" id="fleetInfoClose" class="btn small fleet-info-close" aria-label="Tutup Informasi Pengiriman" title="Tutup">×</button>
+    <button type="button" id="fleetInfoClose" class="btn small fleet-info-close" aria-label="Tutup Informasi Pengiriman" title="Tutup" onclick="closeFleetCustomerInfo()">×</button>
   </div>
   <div class="muted fleet-customer-placeholder">Pilih batang jadwal pada Timeline atau tombol Buka Booking pada dropdown Armada Pulang untuk melihat informasi pelanggan.</div>
   <div id="fleetBookingCustomerDetails" class="hidden">
@@ -1282,18 +1446,74 @@ main{padding-left:178px!important;padding-right:14px!important}
 </section>
 <section id="mitra" class="hidden">
 <h2>Database Mitra Kendaraan</h2>
-<div class="card no-print"><form id="partnerForm"><div class="formgrid">
-<div class="field"><label>Nama Pemilik</label><input id="mName" required></div>
-<div class="field"><label>No. WhatsApp</label><input id="mWa"></div>
-<div class="field"><label>Alamat</label><input id="mAddress"></div>
-<div class="field"><label>Nama Bank</label><input id="mBank"></div>
-<div class="field"><label>Nomor Rekening</label><input id="mAccount"></div>
-<div class="field"><label>Atas Nama</label><input id="mAccountName"></div>
-</div><div class="row" style="margin-top:12px"><button class="btn primary">Simpan Mitra</button></div></form></div>
-<div class="card" style="margin-top:14px"><h3>Daftar Mitra</h3><div class="tablewrap"><table><thead><tr><th>ID Mitra</th><th>Nama</th><th>WA</th><th>Alamat</th><th>Bank</th><th>Rekening</th></tr></thead><tbody id="partnerRows"></tbody></table></div></div>
+<div class="card no-print"><form id="partnerForm"><input type="hidden" id="mEditId" value=""><div class="formgrid">
+<div class="field"><label>Nama Pemilik</label><input id="mName" maxlength="25" required></div>
+<div class="field"><label>No. WhatsApp</label><input id="mWa" maxlength="25"></div>
+<div class="field"><label>Alamat</label><input id="mAddress" maxlength="25"></div>
+<div class="field"><label>Nama Bank</label><input id="mBank" maxlength="25"></div>
+<div class="field"><label>Nomor Rekening</label><input id="mAccount" maxlength="25"></div>
+<div class="field"><label>Atas Nama</label><input id="mAccountName" maxlength="25"></div>
+</div><div class="partner-form-bottom"><div class="partner-form-actions"><button class="btn primary partner-save-button" type="submit">Simpan Mitra</button><button type="button" class="btn partner-list-button" onclick="openPartnerListModal()">Daftar Mitra</button></div></div></form></div>
+<div id="partnerListModal" class="partner-profit-modal hidden" onclick="if(event.target===this)closePartnerListModal()">
+ <div class="partner-profit-dialog partner-profit-dialog-wide"><div class="partner-profit-dialog-head"><h3>Daftar Mitra</h3><button type="button" class="btn small" onclick="closePartnerListModal()">Tutup ✕</button></div>
+  <div class="tablewrap"><table><thead><tr><th>ID Mitra</th><th>Nama</th><th>WA</th><th>Alamat</th><th>Bank</th><th>Rekening</th><th class="partner-actions-head">Aksi</th></tr></thead><tbody id="partnerRows"></tbody></table></div>
+ </div>
+</div>
+<div id="partnerEditModal" class="partner-profit-modal hidden" style="z-index:3100" onclick="if(event.target===this)closePartnerEditModal()">
+ <div class="partner-profit-dialog" style="width:min(560px,96vw)">
+  <div class="partner-profit-dialog-head"><h3>Edit Data Mitra</h3><button type="button" class="btn small" onclick="closePartnerEditModal()">Tutup ✕</button></div>
+  <form id="partnerEditModalForm">
+   <input type="hidden" id="mModalEditId">
+   <div class="formgrid">
+    <div class="field"><label>Nama Pemilik</label><input id="mModalName" maxlength="25" required></div>
+    <div class="field"><label>No. WhatsApp</label><input id="mModalWa" maxlength="25"></div>
+    <div class="field"><label>Alamat</label><input id="mModalAddress" maxlength="25"></div>
+    <div class="field"><label>Nama Bank</label><input id="mModalBank" maxlength="25"></div>
+    <div class="field"><label>Nomor Rekening</label><input id="mModalAccount" maxlength="25"></div>
+    <div class="field"><label>Atas Nama</label><input id="mModalAccountName" maxlength="25"></div>
+   </div>
+   <div class="row" style="margin-top:12px;justify-content:flex-end"><button type="button" class="btn" onclick="closePartnerEditModal()">Batal</button><button type="submit" class="btn primary">Simpan Perubahan</button></div>
+  </form>
+ </div>
+</div>
+<div class="card partner-profit-card" style="margin-top:14px">
+ <div class="partner-profit-head">
+  <h3 class="partner-profit-title">Profit Armada Mitra per Bulan</h3>
+  <div class="field partner-profit-filter"><label for="partnerProfitMonth">Filter rincian bulan</label><input id="partnerProfitMonth" type="month" onchange="renderPartnerProfit()"></div>
+ </div>
+ <div class="partner-profit-stats">
+  <div class="stat"><small>Total Pendapatan Sewa</small><strong id="partnerProfitRevenue">Rp0</strong></div>
+  <div class="stat"><small>Total Bagian Mitra</small><strong id="partnerProfitShare">Rp0</strong></div>
+  <div class="stat"><small>Total Profit Kotor</small><strong id="partnerProfitTotal">Rp0</strong></div>
+ </div>
+ <div class="partner-profit-actions">
+  <button type="button" class="btn small" onclick="openPartnerProfitModal('detail')">Lihat Rincian Profit per Booking</button>
+  <button type="button" class="btn small" onclick="openPartnerProfitModal('history')">Lihat Histori Pembayaran Mitra</button>
+ </div>
+ <div class="partner-top-fleet partner-top-fleet-profit">
+  <div class="partner-top-fleet-heading">Klasemen Armada Mitra <span id="partnerTopFleetPeriod"></span></div>
+  <div id="partnerTopFleetRows" class="partner-league-list"><span class="muted" style="font-size:10px">Belum ada data booking armada mitra.</span></div>
+ </div>
+</div>
+<div id="partnerProfitMonthlyModal" class="partner-profit-modal hidden" onclick="if(event.target===this)closePartnerProfitModal('monthly')">
+ <div class="partner-profit-dialog"><div class="partner-profit-dialog-head"><h3>Rekap Bulanan Profit Mitra</h3><button type="button" class="btn small" onclick="closePartnerProfitModal('monthly')">Tutup ✕</button></div>
+  <div class="tablewrap"><table><thead><tr><th>Bulan</th><th>Jumlah Booking</th><th>Pendapatan Sewa</th><th>Bagian Mitra</th><th>Profit Kotor</th></tr></thead><tbody id="partnerProfitMonthRows"></tbody><tfoot><tr><th>Total</th><th id="partnerProfitBookingCount">0</th><th id="partnerProfitRevenueFoot">Rp0</th><th id="partnerProfitShareFoot">Rp0</th><th id="partnerProfitTotalFoot">Rp0</th></tr></tfoot></table></div>
+ </div>
+</div>
+<div id="partnerProfitDetailModal" class="partner-profit-modal hidden" onclick="if(event.target===this)closePartnerProfitModal('detail')">
+ <div class="partner-profit-dialog partner-profit-dialog-wide"><div class="partner-profit-dialog-head"><h3>Rincian Profit per Booking</h3><button type="button" class="btn small" onclick="closePartnerProfitModal('detail')">Tutup ✕</button></div>
+  <div class="tablewrap"><table><thead><tr><th>Tanggal</th><th>Mitra</th><th>ID Booking</th><th>Pelanggan</th><th>Armada</th><th>Pendapatan Sewa</th><th>Bagian Mitra</th><th>Profit Kotor</th></tr></thead><tbody id="partnerProfitDetailRows"></tbody></table></div>
+  <p class="muted" style="margin:8px 0 0">Catatan: perhitungan berdasarkan bulan tanggal mulai booking. Profit ini belum dikurangi biaya operasional lain seperti BBM, tol, sopir, servis, atau biaya kantor.</p>
+ </div>
+</div>
+<div id="partnerProfitHistoryModal" class="partner-profit-modal hidden" onclick="if(event.target===this)closePartnerProfitModal('history')">
+ <div class="partner-profit-dialog partner-profit-dialog-wide"><div class="partner-profit-dialog-head"><h3>Histori Pembayaran Mitra</h3><button type="button" class="btn small" onclick="closePartnerProfitModal('history')">Tutup ✕</button></div>
+  <p class="muted" id="partnerHistoryPeriodNote">Histori pembayaran mengikuti filter rincian bulan di atas.</p>
+  <div class="tablewrap"><table><thead><tr><th>ID Pembayaran</th><th>Tanggal</th><th>Mitra</th><th>ID Booking</th><th>Nominal</th><th>Status</th><th>Keterangan</th></tr></thead><tbody id="partnerProfitHistoryRows"></tbody><tfoot><tr><th colspan="4">Total Pembayaran</th><th id="partnerProfitHistoryTotal">Rp0</th><th colspan="2"></th></tr></tfoot></table></div>
+ </div>
+</div>
 <div class="partner-booking-payment-layout">
 <div class="card partner-booking-list-card" style="margin-top:14px"><h3>Daftar Booking Armada Mitra</h3><p class="muted">Daftar hanya menampilkan booking yang memakai armada mitra. Data dikelompokkan per mitra; biaya setiap mobil dihitung dari tarif bagian mitra per hari × lama sewa, lalu dijumlahkan menjadi total per mitra.</p><div class="tablewrap"><table><thead><tr><th>Mitra</th><th>Bulan</th><th>ID Booking</th><th>Pelanggan</th><th>Armada</th><th>Periode</th><th>Biaya Armada</th></tr></thead><tbody id="partnerBookingRows"></tbody><tfoot><tr><th colspan="6" style="text-align:right">Total Seluruh Biaya Armada Mitra</th><th id="partnerBookingGrandTotal">Rp0</th></tr></tfoot></table></div></div>
-<div class="card partner-payment-database-card" style="margin-top:14px"><h3>Database Pembayaran Mitra</h3><p class="muted">Riwayat pembayaran yang sudah dicatat, dikelompokkan berdasarkan mitra.</p><div class="tablewrap"><table><thead><tr><th>ID Pembayaran</th><th>ID Booking</th><th>Tanggal</th><th>Nominal</th><th>Status</th></tr></thead><tbody id="partnerPayRowsMitra"></tbody></table></div></div>
 </div>
 
 </section>
@@ -1785,10 +2005,18 @@ function editBooking(id){
 }
 
 // Delegasi event: batang timeline dibuat ulang setiap kali bulan/data berubah.
-function showTimelineBookingCustomer(bookingId){
+function closeFleetCustomerInfo(){
+  const panel=$('fleetBookingCustomerInfo');
+  if(panel) panel.classList.add('hidden');
+}
+
+function showTimelineBookingCustomer(bookingId, infoType){
  const booking=(db.bookings||[]).find(x=>String(x.id)===String(bookingId));
  const panel=$('fleetBookingCustomerInfo'),details=$('fleetBookingCustomerDetails');
  if(!booking||!panel||!details)return;
+ panel.classList.remove('hidden');
+ const title=$('fleetBookingInfoTitle');
+ if(title) title.textContent = infoType === 'pickup' ? 'Informasi Pengambilan' : (infoType === 'dispatch' ? 'Informasi Kirim' : 'Informasi Pengiriman');
  const customer=cust(booking.customerId)||{};
  const name=customer.nama||'Pelanggan tidak ditemukan';
  const address=customer.alamat||'-';
@@ -1808,26 +2036,43 @@ function showTimelineBookingCustomer(bookingId){
  details.classList.remove('hidden');
 }
 
+// Tombol X menutup seluruh kontainer Informasi Pengiriman.
+$('fleetInfoClose')?.addEventListener('click', closeFleetCustomerInfo);
+
 document.addEventListener('click',function(event){
+  const closeBtn=event.target.closest('#fleetInfoClose, .fleet-info-close');
+  if(closeBtn){
+    event.preventDefault();
+    event.stopPropagation();
+    closeFleetCustomerInfo();
+    return;
+  }
+  const dispatchButton=event.target.closest('[data-open-dispatch-booking]');
+  if(dispatchButton){
+    event.preventDefault();
+    event.stopPropagation();
+    showTimelineBookingCustomer(dispatchButton.getAttribute('data-open-dispatch-booking'), 'dispatch');
+    return;
+  }
   const returnButton=event.target.closest('[data-open-customer-booking]');
   if(returnButton){
     event.preventDefault();
     event.stopPropagation();
-    showTimelineBookingCustomer(returnButton.getAttribute('data-open-customer-booking'));
+    showTimelineBookingCustomer(returnButton.getAttribute('data-open-customer-booking'), 'pickup');
     return;
   }
   const bar=event.target.closest('.fleet-timeline-bar[data-booking-id]');
   if(!bar)return;
   event.preventDefault();
   event.stopPropagation();
-  showTimelineBookingCustomer(bar.getAttribute('data-booking-id'));
+  showTimelineBookingCustomer(bar.getAttribute('data-booking-id'), 'info');
 });
 document.addEventListener('keydown',function(event){
   const bar=event.target.closest('.fleet-timeline-bar[data-booking-id]');
   if(!bar||!(event.key==='Enter'||event.key===' '))return;
   event.preventDefault();
   event.stopPropagation();
-  showTimelineBookingCustomer(bar.getAttribute('data-booking-id'));
+  showTimelineBookingCustomer(bar.getAttribute('data-booking-id'), 'info');
 });
 $('bookForm').onsubmit=e=>{
   e.preventDefault();
@@ -2431,7 +2676,50 @@ $('driverForm').onsubmit=e=>{e.preventDefault();let id=$('driverEdit').value||ne
 function editDriver(id){let d=db.drivers.find(x=>x.id===id);if(!d)return;$('driverEdit').value=d.id;$('dName').value=d.name||'';$('dWa').value=d.wa||'';$('dAddress').value=d.address||'';$('dLicense').value=d.license||'';$('dStatus').value=d.status||'Aktif';$('driverTitle').textContent='Edit Driver '+id;document.querySelector('[data-tab="driver"]').click();window.scrollTo(0,0)}
 function deleteDriver(id){if(currentUser?.role!=='admin')return;if(db.bookings.some(b=>b.driverId===id)){alert('Driver sudah terhubung dengan booking. Ubah status menjadi Nonaktif.');return}if(confirm('Hapus driver '+id+'?')){db.drivers=db.drivers.filter(x=>x.id!==id);save()}}
 $('mpDate').value=new Date().toISOString().slice(0,10);$('jDate').value=new Date().toISOString().slice(0,10);
-$('partnerForm').onsubmit=e=>{e.preventDefault();db.partners.push({id:nextId(db.partners,'MTR-'),name:$('mName').value.trim(),wa:$('mWa').value.trim(),address:$('mAddress').value.trim(),bank:$('mBank').value.trim(),accountNo:$('mAccount').value.trim(),accountName:$('mAccountName').value.trim()});$('partnerForm').reset();save()};
+function resetPartnerForm(){ $('partnerForm').reset(); $('mEditId').value=''; const btn=$('partnerForm').querySelector('button[type=submit]'); if(btn)btn.textContent='Simpan Mitra'; }
+function editPartner(id){
+ const m=(db.partners||[]).find(x=>String(x.id)===String(id)); if(!m)return;
+ $('mModalEditId').value=m.id;
+ $('mModalName').value=m.name||'';
+ $('mModalWa').value=m.wa||'';
+ $('mModalAddress').value=m.address||'';
+ $('mModalBank').value=m.bank||'';
+ $('mModalAccount').value=m.accountNo||'';
+ $('mModalAccountName').value=m.accountName||'';
+ $('partnerEditModal').classList.remove('hidden');
+ $('mModalName').focus();
+}
+function closePartnerEditModal(){ $('partnerEditModal').classList.add('hidden'); }
+$('partnerEditModalForm').onsubmit=e=>{
+ e.preventDefault();
+ const id=String($('mModalEditId').value||'');
+ const ix=(db.partners||[]).findIndex(x=>String(x.id)===id);
+ if(ix<0){alert('Data mitra tidak ditemukan.');closePartnerEditModal();return;}
+ const old=db.partners[ix];
+ db.partners[ix]={...old,name:$('mModalName').value.trim(),wa:$('mModalWa').value.trim(),address:$('mModalAddress').value.trim(),bank:$('mModalBank').value.trim(),accountNo:$('mModalAccount').value.trim(),accountName:$('mModalAccountName').value.trim()};
+ closePartnerEditModal();
+ save();
+};
+function deletePartner(id){
+ const linkedCar=(db.cars||[]).some(a=>String(a.partnerId||'')===String(id));
+ const linkedPayment=(db.partnerPayments||[]).some(x=>String(x.partnerId||'')===String(id));
+ const linkedBooking=(db.bookings||[]).some(b=>bookingUnitsOf(b).some(u=>{const a=car(u.carId)||{};return String(u.partnerId||a.partnerId||'')===String(id)&&(u.ownership||a.ownership||'sendiri')==='mitra'}));
+ if(linkedCar||linkedPayment||linkedBooking){alert('Mitra ini sudah terhubung dengan armada, booking, atau pembayaran. Data tidak dihapus agar riwayat transaksi tetap aman.');return;}
+ if(!confirm('Hapus data mitra '+id+'?'))return;
+ db.partners=db.partners.filter(x=>String(x.id)!==String(id));
+ if(String($('mEditId').value)===String(id))resetPartnerForm();
+ save();
+}
+function renderPartnerRows(){
+ $('partnerRows').innerHTML=(db.partners||[]).map(m=>`<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${esc(m.wa||'-')}</td><td>${esc(m.address||'-')}</td><td>${esc(m.bank||'-')}</td><td>${esc(m.accountNo||'-')}</td><td><div class="actions"><button type="button" class="btn small" onclick="editPartner('${String(m.id).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">Edit</button></div></td></tr>`).join('')||'<tr><td colspan="7">Belum ada mitra.</td></tr>';
+}
+$('partnerForm').onsubmit=e=>{
+ e.preventDefault(); const id=$('mEditId').value;
+ const row={id:id||nextId(db.partners,'MTR-'),name:$('mName').value.trim(),wa:$('mWa').value.trim(),address:$('mAddress').value.trim(),bank:$('mBank').value.trim(),accountNo:$('mAccount').value.trim(),accountName:$('mAccountName').value.trim()};
+ const ix=id?db.partners.findIndex(x=>String(x.id)===String(id)):-1;
+ if(ix>=0)db.partners[ix]=row;else db.partners.push(row);
+ resetPartnerForm(); save();
+};
 $('partnerPayForm').onsubmit=e=>{e.preventDefault();let m=db.partners.find(x=>String(x.id)===String($('mpPartner').value)),amount=rupiahInput($('mpAmount').value);if(!m||amount<=0){alert('Pilih mitra dan masukkan nominal pembayaran.');return}const bookings=(db.bookings||[]).filter(b=>partnerUnitsForBooking(b,m.id).length>0).sort((a,b)=>String(a.start||'').localeCompare(String(b.start||'')));let remaining=amount;const allocations=bookings.map(b=>{const bill=partnerBillForBooking(b,m.id);const already=(db.partnerPayments||[]).filter(p=>String(p.partnerId)===String(m.id)&&String(p.bookingId)===String(b.id)).reduce((sum,p)=>sum+Number(p.amount||0),0);return {b,outstanding:Math.max(0,bill-already)}}).filter(x=>x.outstanding>0);const totalOutstanding=allocations.reduce((sum,x)=>sum+x.outstanding,0);if(!bookings.length){alert('Mitra ini belum memiliki booking.');return}if(amount>totalOutstanding){alert('Nominal pembayaran melebihi sisa tagihan mitra sebesar '+money(totalOutstanding)+'.');return}const records=[];for(const x of allocations){if(remaining<=0)break;const part=Math.min(remaining,x.outstanding);if(part>0){records.push({id:nextId([...db.partnerPayments,...records],'PMT-'),bookingId:x.b.id,partnerId:m.id,date:$('mpDate').value,amount:part,status:'Dibayar',note:$('mpNote').value});remaining-=part}}db.partnerPayments.push(...records);$('partnerPayForm').reset();$('mpDate').value=new Date().toISOString().slice(0,10);save()};
 $('mpPartner').onchange=()=>renderPartnerPaymentSection();
 $('journalForm').onsubmit=e=>{e.preventDefault();let amount=rupiahInput($('jAmount').value);if(amount<=0||$('jDebit').value===$('jCredit').value){alert('Nominal harus positif dan akun debit/kredit harus berbeda.');return}db.journals.push({id:nextId(db.journals,'JRN-'),date:$('jDate').value,note:$('jNote').value,debitAccount:$('jDebit').value,creditAccount:$('jCredit').value,amount,source:'Manual',reference:''});$('journalForm').reset();$('jDate').value=new Date().toISOString().slice(0,10);save()};
@@ -2449,7 +2737,7 @@ function payPartnerGroup(partnerId){
  }).filter(x=>x.outstanding>0);
  const totalOutstanding=allocations.reduce((sum,x)=>sum+x.outstanding,0);
  if(totalOutstanding<=0){alert('Pembayaran mitra '+m.name+' sudah dibayar lunas.');return;}
- const raw=prompt('Pembayaran untuk mitra '+m.name+'\nTotal sisa tagihan: '+money(totalOutstanding)+'\nMasukkan nominal pembayaran:',String(totalOutstanding));
+ const raw=prompt('Pembayaran untuk mitra '+m.name+'\\nTotal sisa tagihan: '+money(totalOutstanding)+'\\nMasukkan nominal pembayaran:',String(totalOutstanding));
  if(raw===null)return;
  const amount=rupiahInput(raw);
  if(!Number.isFinite(amount)||amount<=0){alert('Nominal pembayaran harus lebih dari 0.');return;}
@@ -2612,7 +2900,128 @@ function renderPartnerBookings(){
  });
  $('partnerBookingRows').innerHTML=rows.join('')||'<tr><td colspan="7" class="muted">Tidak ada booking armada mitra yang belum dibayar.</td></tr>';
  $('partnerBookingGrandTotal').textContent=money(grand);
+ renderPartnerProfit();
 }
+
+function renderPartnerProfit(){
+ const selectedMonth=String($('partnerProfitMonth')?.value||'');
+ const detail=[];
+ (db.bookings||[]).forEach(b=>{
+  const bookingDays=Number(b.days||0);
+  if(bookingDays<=0)return;
+  bookingUnitsOf(b).forEach(u=>{
+   const a=car(u.carId)||{};
+   const ownership=u.ownership||a.ownership||'sendiri';
+   const partnerId=u.partnerId||a.partnerId||'';
+   if(ownership!=='mitra'||!partnerId)return;
+   const start=String(b.start||'').slice(0,10);
+   const month=start.slice(0,7);
+   if(!month)return;
+   const partner=(db.partners||[]).find(m=>String(m.id)===String(partnerId));
+   const dailyRent=Number(u.rate??b.rate??0);
+   const dailyShare=Number(u.partnerRate??a.partnerRate??b.partnerRate??0);
+   const revenue=dailyRent*bookingDays;
+   const share=dailyShare*bookingDays;
+   detail.push({month,start,partner:partner?.name||partner?.nama||partnerId,bookingId:b.id,customer:cust(b.customerId)?.nama||b.customerId||'-',vehicle:(a.jenis||u.carId||'-')+' ('+(a.plat||'-')+')',revenue,share,profit:revenue-share});
+  });
+ });
+ detail.sort((a,b)=>b.start.localeCompare(a.start)||String(a.partner).localeCompare(String(b.partner))||String(a.bookingId).localeCompare(String(b.bookingId)));
+ const filtered=selectedMonth?detail.filter(x=>x.month===selectedMonth):detail;
+ const sum=(arr,key)=>arr.reduce((total,x)=>total+Number(x[key]||0),0);
+ const totalRevenue=sum(filtered,'revenue'),totalShare=sum(filtered,'share'),totalProfit=sum(filtered,'profit');
+ if($('partnerProfitRevenue'))$('partnerProfitRevenue').textContent=money(totalRevenue);
+ if($('partnerProfitShare'))$('partnerProfitShare').textContent=money(totalShare);
+ if($('partnerProfitTotal'))$('partnerProfitTotal').textContent=money(totalProfit);
+ if($('partnerProfitRevenueModal'))$('partnerProfitRevenueModal').textContent=money(totalRevenue);
+ if($('partnerProfitShareModal'))$('partnerProfitShareModal').textContent=money(totalShare);
+ if($('partnerProfitTotalModal'))$('partnerProfitTotalModal').textContent=money(totalProfit);
+ const months=new Map();
+ detail.forEach(x=>{if(!months.has(x.month))months.set(x.month,{bookings:new Set(),revenue:0,share:0,profit:0});const g=months.get(x.month);g.bookings.add(String(x.bookingId));g.revenue+=x.revenue;g.share+=x.share;g.profit+=x.profit;});
+ const monthRows=[...months.entries()].sort((a,b)=>b[0].localeCompare(a[0])).map(([month,g])=>{
+  const label=new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(new Date(month+'-01T00:00:00'));
+  return `<tr><td>${esc(label)}</td><td>${g.bookings.size}</td><td>${money(g.revenue)}</td><td>${money(g.share)}</td><td><strong>${money(g.profit)}</strong></td></tr>`;
+ });
+ if($('partnerProfitMonthRows'))$('partnerProfitMonthRows').innerHTML=monthRows.join('')||'<tr><td colspan="5" class="muted">Belum ada booking armada mitra.</td></tr>';
+ const allBookingCount=new Set(detail.map(x=>String(x.bookingId))).size;
+ if($('partnerProfitBookingCount'))$('partnerProfitBookingCount').textContent=selectedMonth?new Set(filtered.map(x=>String(x.bookingId))).size:allBookingCount;
+ if($('partnerProfitRevenueFoot'))$('partnerProfitRevenueFoot').textContent=money(sum(detail,'revenue'));
+ if($('partnerProfitShareFoot'))$('partnerProfitShareFoot').textContent=money(sum(detail,'share'));
+ if($('partnerProfitTotalFoot'))$('partnerProfitTotalFoot').textContent=money(sum(detail,'profit'));
+ if($('partnerProfitDetailRows'))$('partnerProfitDetailRows').innerHTML=filtered.map(x=>`<tr><td>${formatDateDMY(x.start)}</td><td>${esc(x.partner)}</td><td>${esc(x.bookingId)}</td><td>${esc(x.customer)}</td><td>${esc(x.vehicle)}</td><td>${money(x.revenue)}</td><td>${money(x.share)}</td><td><strong>${money(x.profit)}</strong></td></tr>`).join('')||'<tr><td colspan="8" class="muted">Tidak ada rincian profit untuk bulan ini.</td></tr>';
+ // Klasemen armada mitra berdasarkan akumulasi hari sewa yang jatuh pada bulan terpilih.
+ const fleetCounts=new Map();
+ const monthBounds=selectedMonth?(()=>{const [yy,mm]=selectedMonth.split('-').map(Number);return {start:Date.UTC(yy,mm-1,1),end:Date.UTC(yy,mm,0)};})():null;
+ (db.bookings||[]).forEach(b=>{
+  const bookingStart=String(b.start||'').slice(0,10),bookingEnd=String(b.end||'').slice(0,10);
+  if(!bookingStart)return;
+  const startMs=Date.parse(bookingStart+'T00:00:00Z');
+  const endMs=Date.parse((bookingEnd||bookingStart)+'T00:00:00Z');
+  if(!Number.isFinite(startMs)||!Number.isFinite(endMs))return;
+  let countedDays=Math.max(1,Math.floor((endMs-startMs)/86400000)+1);
+  if(monthBounds){
+   const overlapStart=Math.max(startMs,monthBounds.start),overlapEnd=Math.min(endMs,monthBounds.end);
+   if(overlapEnd<overlapStart)return;
+   countedDays=Math.floor((overlapEnd-overlapStart)/86400000)+1;
+  }
+  const seenInBooking=new Set();
+  bookingUnitsOf(b).forEach(u=>{
+   const a=car(u.carId)||{};
+   const ownership=u.ownership||a.ownership||'sendiri';
+   const partnerId=u.partnerId||a.partnerId||'';
+   if(ownership!=='mitra'||!partnerId)return;
+   const key=String(u.carId||a.id||a.plat||'');
+   if(!key||seenInBooking.has(key))return;
+   seenInBooking.add(key);
+   const label=(a.jenis||u.carId||'Armada')+' ('+(a.plat||'-')+')';
+   const current=fleetCounts.get(key)||{label,days:0,count:0,partner:(db.partners||[]).find(m=>String(m.id)===String(partnerId))?.name||'-'};
+   current.days+=countedDays;
+   current.count++;
+   fleetCounts.set(key,current);
+  });
+ });
+ const ranking=[...fleetCounts.values()].sort((a,b)=>b.days-a.days||b.count-a.count||a.label.localeCompare(b.label)).slice(0,3);
+ if($('partnerTopFleetPeriod'))$('partnerTopFleetPeriod').textContent=selectedMonth?'— '+new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(new Date(selectedMonth+'-01T00:00:00')):'— seluruh periode';
+ if($('partnerTopFleetRows'))$('partnerTopFleetRows').innerHTML=ranking.map((x,i)=>`<div class="partner-league-row"><b class="partner-league-rank">${['🥇','🥈','🥉'][i]}</b><span class="partner-league-team"><strong>${esc(x.label)}</strong><small>${esc(x.partner)} · ${x.count} booking</small></span><strong class="partner-league-days">${x.days} <small>hari</small></strong></div>`).join('')||'<span class="muted" style="font-size:10px">Belum ada booking armada mitra pada periode ini.</span>';
+ if($('partnerProfitHistoryModal')&&!$('partnerProfitHistoryModal').classList.contains('hidden'))renderPartnerPaymentHistory();
+}
+
+
+function openPartnerListModal(){
+ const el=document.getElementById('partnerListModal');
+ if(el)el.classList.remove('hidden');
+}
+function closePartnerListModal(){
+ const el=document.getElementById('partnerListModal');
+ if(el)el.classList.add('hidden');
+}
+
+function openPartnerProfitModal(which){
+ const ids={monthly:'partnerProfitMonthlyModal',detail:'partnerProfitDetailModal',history:'partnerProfitHistoryModal'};
+ const el=document.getElementById(ids[which]);
+ if(!el)return;
+ renderPartnerProfit();
+ if(which==='history')renderPartnerPaymentHistory();
+ el.classList.remove('hidden');
+}
+function closePartnerProfitModal(which){
+ const ids={monthly:'partnerProfitMonthlyModal',detail:'partnerProfitDetailModal',history:'partnerProfitHistoryModal'};
+ const el=document.getElementById(ids[which]);
+ if(el)el.classList.add('hidden');
+}
+function renderPartnerPaymentHistory(){
+ const selectedMonth=String($('partnerProfitMonth')?.value||'');
+ const payments=(db.partnerPayments||[]).filter(p=>!selectedMonth||String(p.date||'').slice(0,7)===selectedMonth).slice().sort((a,b)=>String(b.date||'').localeCompare(String(a.date||''))||String(b.id||'').localeCompare(String(a.id||'')));
+ if($('partnerHistoryPeriodNote'))$('partnerHistoryPeriodNote').textContent=selectedMonth?'Histori pembayaran untuk '+new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(new Date(selectedMonth+'-01T00:00:00'))+'.':'Histori pembayaran seluruh bulan.';
+ const rows=payments.map(p=>{
+  const partner=(db.partners||[]).find(m=>String(m.id)===String(p.partnerId));
+  return `<tr><td>${esc(p.id||'-')}</td><td>${esc(formatDateDMY(p.date)||p.date||'-')}</td><td>${esc(partner?.name||partner?.nama||p.partnerId||'-')}</td><td>${esc(p.bookingId||'-')}</td><td>${money(p.amount)}</td><td>${esc(p.status||'Dibayar')}</td><td>${esc(p.note||'-')}</td></tr>`;
+ });
+ if($('partnerProfitHistoryRows'))$('partnerProfitHistoryRows').innerHTML=rows.join('')||'<tr><td colspan="7" class="muted">Belum ada histori pembayaran mitra.</td></tr>';
+ if($('partnerProfitHistoryTotal'))$('partnerProfitHistoryTotal').textContent=money(payments.reduce((sum,p)=>sum+Number(p.amount||0),0));
+}
+document.addEventListener('keydown',function(event){
+ if(event.key==='Escape')['monthly','detail','history'].forEach(closePartnerProfitModal);
+});
 let bookingStatusFilter='all';
 function setBookingStatusFilter(status){
  bookingStatusFilter=status;
@@ -2831,7 +3240,7 @@ if($('fleetTimelineMonth')){
  }));
  dispatchBookings.sort((a,b)=>String(a.car.jenis||a.car.merk||'').localeCompare(String(b.car.jenis||b.car.merk||''))||String(a.car.plat||'').localeCompare(String(b.car.plat||'')));
  if($('fleetDispatchCount'))$('fleetDispatchCount').textContent=dispatchBookings.length+' booking';
- if($('fleetDispatchRows'))$('fleetDispatchRows').innerHTML=dispatchBookings.map(x=>`<div class="fleet-return-item"><b>${esc(x.car.jenis||x.car.merk||'Armada')}</b><span>${esc(x.car.plat||'-')}</span><span>${esc(x.booking.id||'-')} · kirim ${formatDateDMY(x.start)}</span><button type="button" class="btn small" onclick="editBooking('${esc(x.booking.id||'')}')">Buka Booking</button></div>`).join('')||'<div class="muted">Tidak ada armada yang harus dikirim besok.</div>';
+ if($('fleetDispatchRows'))$('fleetDispatchRows').innerHTML=dispatchBookings.map(x=>`<div class="fleet-return-item"><b>${esc(x.car.jenis||x.car.merk||'Armada')}</b><span>${esc(x.car.plat||'-')}</span><span>${esc(x.booking.id||'-')} · kirim ${formatDateDMY(x.start)}</span><button type="button" class="btn small" data-open-dispatch-booking="${esc(x.booking.id||'')}">Buka Booking</button></div>`).join('')||'<div class="muted">Tidak ada armada yang harus dikirim besok.</div>';
  updateFleetDispatchVisibility();
  const uniqueCars=[...new Map(scheduled.map(x=>[String(x.car.id),x.car])).values()]
    .sort((a,b)=>{
@@ -3037,7 +3446,7 @@ const partnerExpenseOptions=partnerExpenseCars.map(a=>{
 }).join('');
 $('eCar').innerHTML=(ownExpenseOptions?`<optgroup label="Armada Milik Sendiri">${ownExpenseOptions}</optgroup>`:'')+(partnerExpenseOptions?`<optgroup label="Armada Milik Mitra">${partnerExpenseOptions}</optgroup>`:'');
 $('aPartner').innerHTML='<option value="">Pilih mitra (jika milik mitra)</option>'+db.partners.map(m=>`<option value="${m.id}">${esc(m.name)} (${m.id})</option>`).join('');
-$('partnerRows').innerHTML=db.partners.map(m=>`<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${esc(m.wa)}</td><td>${esc(m.address)}</td><td>${esc(m.bank)}</td><td>${esc(m.accountNo)}</td></tr>`).join('')||'<tr><td colspan="6">Belum ada mitra.</td></tr>';renderPartnerBookings();
+renderPartnerRows();renderPartnerBookings();
 renderPartnerPaymentSection();
 $('journalRows').innerHTML=db.journals.map(j=>`<tr><td>${esc(j.id)}</td><td>${esc(j.date)}</td><td>${esc(j.note)}</td><td>${esc(j.debitAccount)}</td><td>${esc(j.creditAccount)}</td><td>${money(j.amount)}</td></tr>`).join('')||'<tr><td colspan="6">Belum ada jurnal manual.</td></tr>';
 let jDebit=db.journals.reduce((s,j)=>s+Number(j.amount||0),0);$('jDebitTotal').textContent=money(jDebit);$('jCreditTotal').textContent=money(jDebit);
@@ -3514,7 +3923,7 @@ function applyLoadedData(dbData, user){
   try {
     if ($('eCar')) $('eCar').innerHTML='<option value="">Biaya umum usaha</option>'+db.cars.map(a=>`<option value="${a.id}">${esc(a.jenis)} (${esc(a.plat)})</option>`).join('');
     if ($('aPartner')) $('aPartner').innerHTML='<option value="">Pilih mitra (jika milik mitra)</option>'+db.partners.map(m=>`<option value="${m.id}">${esc(m.name)} (${m.id})</option>`).join('');
-    if ($('partnerRows')) $('partnerRows').innerHTML=db.partners.map(m=>`<tr><td>${esc(m.id)}</td><td>${esc(m.name)}</td><td>${esc(m.wa)}</td><td>${esc(m.address)}</td><td>${esc(m.bank)}</td><td>${esc(m.accountNo)}</td></tr>`).join('')||'<tr><td colspan="6">Belum ada mitra.</td></tr>';
+    renderPartnerRows();
     if (typeof renderPartnerBookings === 'function') renderPartnerBookings();
     if (typeof renderPartnerPaymentSection === 'function') renderPartnerPaymentSection();
     if ($('journalRows')) $('journalRows').innerHTML=db.journals.map(j=>`<tr><td>${esc(j.id)}</td><td>${esc(j.date)}</td><td>${esc(j.note)}</td><td>${esc(j.debitAccount)}</td><td>${esc(j.creditAccount)}</td><td>${money(j.amount)}</td></tr>`).join('')||'<tr><td colspan="6">Belum ada jurnal manual.</td></tr>';

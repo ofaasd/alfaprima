@@ -872,7 +872,7 @@ class RentalController extends Controller
                     );
                 }
                 if (!empty($ids)) {
-                    Partner::whereNotIn('id', $ids)->whereDoesntHave('cars')->delete();
+                    Partner::whereNotIn('id', $ids)->whereDoesntHave('cars')->whereDoesntHave('partnerPayments')->delete();
                 }
             }
 
