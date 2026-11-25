@@ -1246,6 +1246,462 @@ main{padding-left:178px!important;padding-right:14px!important}
 .user-actions{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
 .user-actions .btn.small{padding:3px 7px;font-size:10px;min-height:22px;line-height:1.2}
 
+
+
+/* Daftar pelanggan: tabel ringkas dan pagination 10 baris */
+#pelanggan .customer-list-card{padding:9px 10px;max-width:100%;}
+#pelanggan .customer-compact-table{font-size:10px;line-height:1.25;}
+#pelanggan .customer-compact-table th{font-size:9px;padding:6px 7px;white-space:nowrap;}
+#pelanggan .customer-compact-table td{font-size:10px;padding:6px 7px;vertical-align:middle;}
+#pelanggan .customer-compact-table .btn.small{font-size:9px;padding:4px 7px;min-height:23px;}
+#pelanggan .customer-compact-table .actions{gap:4px;}
+#pelanggan .customer-pagination{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px;font-size:10px;color:var(--muted);}
+#pelanggan .customer-pagination button{font-size:10px;padding:4px 9px;min-height:25px;}
+#pelanggan .customer-pagination button:disabled{opacity:.4;cursor:not-allowed;}
+@media(max-width:700px){#pelanggan .customer-compact-table{min-width:760px;}#pelanggan .customer-pagination{justify-content:center;}}
+
+/* Form Data Pelanggan: ringkas, lebar kolom setara ±25 karakter */
+#pelanggan > .card.no-print{
+  width:max-content;
+  max-width:100%;
+  padding:10px 12px;
+  margin-top:0;
+}
+#pelanggan > .card.no-print h3{font-size:13px;margin:0 0 8px}
+#pelanggan #custForm .formgrid{
+  grid-template-columns:repeat(3,minmax(0,25ch));
+  gap:7px 10px;
+}
+#pelanggan #custForm .field{width:25ch;max-width:100%}
+#pelanggan #custForm label{font-size:10px;margin-bottom:3px}
+#pelanggan #custForm input,
+#pelanggan #custForm select{
+  width:100%;height:32px;min-height:32px;
+  padding:6px 8px;font-size:11px;border-radius:7px;
+}
+#pelanggan #custForm > .row{
+  width:max-content;max-width:100%;
+  gap:7px;margin-top:8px!important;
+}
+#pelanggan #custForm > .row > button{
+  flex:0 0 auto;width:auto;min-width:88px;
+  padding:7px 13px;font-size:11px;border-radius:7px;
+}
+@media(max-width:700px){
+  #pelanggan > .card.no-print{width:100%}
+  #pelanggan #custForm .formgrid{grid-template-columns:repeat(2,minmax(0,25ch))}
+}
+@media(max-width:480px){
+  #pelanggan #custForm .formgrid{grid-template-columns:minmax(0,25ch)}
+  #pelanggan #custForm > .row{width:100%}
+  #pelanggan #custForm > .row > button{flex:1}
+}
+
+
+
+/* Form Data Armada: ringkas, lebar kolom sekitar 25 karakter */
+#armada > .card.no-print:first-of-type{
+  width:fit-content;
+  max-width:100%;
+  padding:12px;
+}
+#armada #carForm .formgrid{
+  grid-template-columns:repeat(auto-fit,minmax(min(25ch,100%),25ch));
+  gap:8px 10px;
+}
+#armada #carForm .field{
+  width:25ch;
+  max-width:100%;
+  min-width:0;
+}
+#armada #carForm input,
+#armada #carForm select{
+  width:100%;
+  min-width:0;
+  height:34px;
+  padding:7px 9px;
+  font-size:12px;
+}
+#armada #carForm label{
+  font-size:11px;
+  margin-bottom:3px;
+}
+#armada #carForm .row{
+  gap:8px;
+  margin-top:9px!important;
+  justify-content:flex-start;
+}
+#armada #carForm .row > button{
+  flex:0 0 auto;
+  width:auto;
+  min-width:120px;
+  padding:7px 14px;
+  font-size:12px;
+}
+@media(max-width:560px){
+  #armada > .card.no-print:first-of-type{width:100%}
+  #armada #carForm .formgrid{grid-template-columns:minmax(0,25ch)}
+  #armada #carForm .field{width:100%}
+  #armada #carForm .row > button{min-width:0;flex:1}
+}
+
+
+/* Popup Armada Pribadi */
+#privateFleetModal{position:fixed;inset:0;z-index:4200;background:rgba(2,8,18,.76);display:flex;align-items:center;justify-content:center;padding:18px}
+#privateFleetModal.hidden{display:none!important}
+#privateFleetModal .private-fleet-dialog{width:min(1080px,96vw);max-height:88vh;overflow:auto;background:var(--panel,#131f32);border:1px solid var(--line,#30425d);border-radius:14px;padding:14px;box-shadow:0 18px 55px rgba(0,0,0,.45)}
+#privateFleetModal .private-fleet-head{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap}
+#privateFleetModal .private-fleet-tools{display:flex;align-items:center;gap:8px;margin-left:auto}
+#privateFleetModal .private-fleet-tools input{width:min(280px,55vw);height:34px;font-size:12px}
+#privateFleetModal table{font-size:11px}
+#privateFleetModal th,#privateFleetModal td{padding:7px 8px}
+#privateFleetModal .private-fleet-close{font-size:18px;line-height:1;padding:5px 10px}
+@media(max-width:600px){#privateFleetModal{padding:7px}#privateFleetModal .private-fleet-dialog{width:100%;max-height:92vh;padding:10px}#privateFleetModal .private-fleet-head{align-items:flex-start}#privateFleetModal .private-fleet-tools{width:100%}#privateFleetModal .private-fleet-tools input{flex:1;width:0}}
+
+
+/* Daftar armada terpisah dan lebih ringkas */
+#armada .fleet-list-card{padding:10px 12px}
+#armada .fleet-list-title{font-size:13px;margin:0 0 8px;color:var(--gold)}
+#armada .fleet-compact-table{font-size:10px;line-height:1.25}
+#armada .fleet-compact-table th,
+#armada .fleet-compact-table td{padding:5px 6px}
+#armada .fleet-compact-table small{font-size:9px}
+#armada .fleet-compact-table .btn.small{font-size:10px;padding:4px 7px;min-height:24px}
+#armada .fleet-list-card .tablewrap{max-height:60vh;overflow:auto}
+
+
+/* Armada pribadi dan mitra ditampilkan melalui popup floating */
+#armada .fleet-list-inline-hidden{display:none!important}
+#partnerFleetModal{position:fixed;inset:0;z-index:4201;background:rgba(2,8,18,.76);display:flex;align-items:center;justify-content:center;padding:18px}
+#partnerFleetModal.hidden{display:none!important}
+#partnerFleetModal .private-fleet-dialog{width:min(1080px,96vw);max-height:88vh;overflow:auto;background:var(--panel,#131f32);border:1px solid var(--line,#30425d);border-radius:14px;padding:14px;box-shadow:0 18px 55px rgba(0,0,0,.45)}
+#partnerFleetModal .private-fleet-head{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap}
+#partnerFleetModal .private-fleet-tools{display:flex;align-items:center;gap:8px;margin-left:auto}
+#partnerFleetModal .private-fleet-tools input{width:min(280px,55vw);height:34px;font-size:12px}
+#partnerFleetModal table{font-size:11px}
+#partnerFleetModal th,#partnerFleetModal td{padding:7px 8px}
+#partnerFleetModal .private-fleet-close{font-size:18px;line-height:1;padding:5px 10px}
+@media(max-width:600px){#partnerFleetModal{padding:7px}#partnerFleetModal .private-fleet-dialog{width:100%;max-height:92vh;padding:10px}#partnerFleetModal .private-fleet-head{align-items:flex-start}#partnerFleetModal .private-fleet-tools{width:100%}#partnerFleetModal .private-fleet-tools input{flex:1;width:0}}
+
+
+/* Form Pencatatan Pembayaran: ringkas dengan lebar kolom sekitar 25 karakter */
+#pembayaran > .card.no-print{
+  width:fit-content;
+  max-width:100%;
+  padding:12px;
+}
+#pembayaran #payForm .formgrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(25ch,100%),25ch));
+  gap:8px 10px;
+  align-items:start;
+}
+#pembayaran #payForm .field{
+  width:25ch;
+  max-width:100%;
+  min-width:0;
+}
+#pembayaran #payForm input,
+#pembayaran #payForm select{
+  width:100%;
+  min-width:0;
+  height:34px;
+  padding:7px 9px;
+  font-size:12px;
+}
+#pembayaran #payForm label{
+  display:block;
+  font-size:11px;
+  line-height:1.25;
+  margin-bottom:3px;
+}
+#pembayaran #pBookingList{
+  width:100%;
+  min-height:34px;
+  box-sizing:border-box;
+  padding:7px 9px;
+  font-size:11px;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+#pembayaran #payForm .row{
+  gap:8px;
+  margin-top:9px!important;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+}
+#pembayaran #payForm .row > button{
+  flex:0 0 auto;
+  width:auto;
+  min-width:112px;
+  min-height:32px;
+  padding:7px 12px;
+  font-size:11px;
+}
+#pembayaran > .card:not(.no-print){
+  padding:12px;
+}
+#pembayaran > .card:not(.no-print) h3{
+  font-size:13px;
+}
+#pembayaran > .card:not(.no-print) table{
+  font-size:11px;
+}
+#pembayaran > .card:not(.no-print) th,
+#pembayaran > .card:not(.no-print) td{
+  padding:6px 8px;
+}
+@media(max-width:560px){
+  #pembayaran > .card.no-print{width:100%}
+  #pembayaran #payForm .formgrid{grid-template-columns:minmax(0,25ch)}
+  #pembayaran #payForm .field{width:100%}
+  #pembayaran #payForm .row > button{min-width:0;flex:1}
+}
+
+
+/* Riwayat Pembayaran: tabel lebih padat dan mudah dipindai */
+#pembayaran .card:has(#payRows){
+  padding:10px;
+  margin-top:10px!important;
+}
+#pembayaran .card:has(#payRows) h3{
+  font-size:12px;
+  margin:0 0 7px;
+}
+#pembayaran .card:has(#payRows) .field{
+  margin:6px 0 8px!important;
+}
+#pembayaran #qPaymentHistory{
+  height:32px;
+  padding:6px 9px;
+  font-size:11px;
+}
+#pembayaran .card:has(#payRows) .tablewrap{
+  overflow-x:auto;
+  border-radius:8px;
+}
+#pembayaran .card:has(#payRows) table{
+  width:100%;
+  min-width:760px;
+  table-layout:fixed;
+  border-collapse:collapse;
+  font-size:10px;
+  line-height:1.3;
+}
+#pembayaran .card:has(#payRows) th,
+#pembayaran .card:has(#payRows) td{
+  padding:5px 6px;
+  vertical-align:top;
+  overflow-wrap:anywhere;
+}
+#pembayaran .card:has(#payRows) th{
+  font-size:10px;
+  line-height:1.25;
+}
+#pembayaran .card:has(#payRows) th:nth-child(1){width:4%}
+#pembayaran .card:has(#payRows) th:nth-child(2){width:9%}
+#pembayaran .card:has(#payRows) th:nth-child(3){width:13%}
+#pembayaran .card:has(#payRows) th:nth-child(4){width:9%}
+#pembayaran .card:has(#payRows) th:nth-child(5){width:13%}
+#pembayaran .card:has(#payRows) th:nth-child(6){width:12%}
+#pembayaran .card:has(#payRows) th:nth-child(7){width:30%}
+#pembayaran .card:has(#payRows) th:nth-child(8){width:10%}
+#pembayaran #payRows td:nth-child(4){
+  line-height:1.45;
+}
+#pembayaran #payRows td:nth-child(7)>div{
+  margin:2px 0!important;
+  padding:3px 0!important;
+  border-bottom:1px solid var(--line);
+}
+#pembayaran #payRows td:nth-child(7)>div>div:first-child{
+  font-size:10px;
+  line-height:1.35;
+}
+#pembayaran #payRows td:nth-child(7) .row{
+  margin:3px 0 0!important;
+  gap:4px!important;
+}
+#pembayaran #payRows .btn.small{
+  min-height:22px;
+  padding:3px 9px;
+  font-size:10px;
+  line-height:1.1;
+}
+#pembayaran #payRows .badge{
+  font-size:9px;
+  padding:3px 6px;
+  white-space:normal;
+}
+#pembayaran #payRows input[type="checkbox"]{
+  transform:scale(.85);
+  transform-origin:top left;
+}
+#pembayaran .card:has(#payRows) .btn{
+  font-size:10px;
+}
+@media(max-width:700px){
+  #pembayaran .card:has(#payRows){padding:8px}
+  #pembayaran .card:has(#payRows) table{min-width:720px}
+}
+
+
+/* Filter bulan dan pencarian riwayat pembayaran */
+#pembayaran .payment-history-filters .field{max-width:100%}
+#pembayaran #paymentHistoryMonth{height:32px;padding:6px 9px;font-size:11px}
+#pembayaran .payment-history-filters label{font-size:10px;margin-bottom:3px}
+@media(max-width:560px){
+  #pembayaran .payment-history-filters .field{width:100%;min-width:0!important}
+}
+
+
+/* Form Data Pengeluaran: ringkas, lebar kolom maksimal sekitar 25 karakter */
+#pengeluaran > .card.no-print:first-of-type{
+  width:fit-content;
+  max-width:100%;
+  padding:12px;
+}
+#pengeluaran #expenseForm .formgrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(25ch,100%),25ch));
+  gap:8px 10px;
+  align-items:start;
+}
+#pengeluaran #expenseForm .field{
+  width:25ch;
+  max-width:100%;
+  min-width:0;
+  grid-column:auto!important;
+}
+#pengeluaran #expenseForm input,
+#pengeluaran #expenseForm select{
+  width:100%;
+  min-width:0;
+  height:34px;
+  box-sizing:border-box;
+  padding:7px 9px;
+  font-size:12px;
+}
+#pengeluaran #expenseForm label{
+  display:block;
+  font-size:11px;
+  line-height:1.25;
+  margin-bottom:3px;
+}
+#pengeluaran #expenseForm .row{
+  gap:8px;
+  margin-top:9px!important;
+  justify-content:flex-start;
+}
+#pengeluaran #expenseForm .row > button{
+  flex:0 0 auto;
+  width:auto;
+  min-width:135px;
+  min-height:32px;
+  padding:7px 14px;
+  font-size:11px;
+}
+#pengeluaran > .card:not(.no-print){
+  padding:12px;
+}
+@media(max-width:560px){
+  #pengeluaran > .card.no-print:first-of-type{width:100%}
+  #pengeluaran #expenseForm .formgrid{grid-template-columns:minmax(0,25ch)}
+  #pengeluaran #expenseForm .field{width:100%}
+  #pengeluaran #expenseForm .row > button{width:100%}
+}
+
+
+/* Riwayat Pengeluaran: ringkas dan responsif untuk layar kecil */
+#pengeluaran .card:has(#expenseRows){
+  width:min(100%,920px);
+  max-width:100%;
+  padding:10px;
+  margin-top:10px!important;
+  box-sizing:border-box;
+}
+#pengeluaran .card:has(#expenseRows) .toolbar{
+  gap:8px;
+  margin-bottom:6px;
+}
+#pengeluaran .card:has(#expenseRows) h3{
+  font-size:12px;
+  margin:0;
+}
+#pengeluaran #expenseTotal{
+  font-size:12px;
+  white-space:nowrap;
+}
+#pengeluaran .card:has(#expenseRows) .formgrid{
+  display:grid;
+  grid-template-columns:minmax(145px,190px) minmax(190px,1fr)!important;
+  gap:7px 9px;
+  margin:8px 0 9px!important;
+  align-items:end;
+}
+#pengeluaran .card:has(#expenseRows) .field{
+  min-width:0;
+  margin:0;
+}
+#pengeluaran .card:has(#expenseRows) label{
+  font-size:10px;
+  margin-bottom:3px;
+}
+#pengeluaran #expenseMonthFilter,
+#pengeluaran #qExpenseHistory{
+  width:100%;
+  min-width:0;
+  height:32px;
+  box-sizing:border-box;
+  padding:6px 8px;
+  font-size:11px;
+}
+#pengeluaran .card:has(#expenseRows) .tablewrap{
+  width:100%;
+  max-width:100%;
+  overflow-x:auto;
+  border-radius:8px;
+  -webkit-overflow-scrolling:touch;
+}
+#pengeluaran .card:has(#expenseRows) table{
+  width:100%;
+  min-width:560px;
+  table-layout:fixed;
+  border-collapse:collapse;
+  font-size:10px;
+  line-height:1.3;
+}
+#pengeluaran .card:has(#expenseRows) th,
+#pengeluaran .card:has(#expenseRows) td{
+  padding:6px 7px;
+  vertical-align:middle;
+  overflow-wrap:anywhere;
+}
+#pengeluaran .card:has(#expenseRows) th{
+  font-size:10px;
+  white-space:normal;
+}
+#pengeluaran .card:has(#expenseRows) th:nth-child(1){width:15%}
+#pengeluaran .card:has(#expenseRows) th:nth-child(2){width:13%}
+#pengeluaran .card:has(#expenseRows) th:nth-child(3){width:17%}
+#pengeluaran .card:has(#expenseRows) th:nth-child(4){width:29%}
+#pengeluaran .card:has(#expenseRows) th:nth-child(5){width:16%}
+#pengeluaran .card:has(#expenseRows) th:nth-child(6){width:10%}
+#pengeluaran #expenseRows .btn,
+#pengeluaran #expenseRows button{
+  min-height:23px;
+  padding:3px 7px;
+  font-size:10px;
+}
+@media(max-width:600px){
+  #pengeluaran .card:has(#expenseRows){padding:8px}
+  #pengeluaran .card:has(#expenseRows) .formgrid{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  #pengeluaran .card:has(#expenseRows) table{min-width:530px}
+  #pengeluaran .card:has(#expenseRows) th,
+  #pengeluaran .card:has(#expenseRows) td{padding:5px 6px}
+}
 </style></head>
 <body class="auth-required">
 <div id="authScreen" style="position:fixed;inset:0;z-index:1000;background:#0b1220;display:flex;align-items:center;justify-content:center;padding:18px">
@@ -1356,7 +1812,7 @@ main{padding-left:178px!important;padding-right:14px!important}
 <div class="card no-print"><h3 id="custTitle">Tambah Pelanggan</h3><form id="custForm"><input type="hidden" id="custEdit"><div class="formgrid">
 <div class="field"><label>Nama</label><input id="cNama" required></div><div class="field"><label>Alamat</label><input id="cAlamat"></div><div class="field"><label>No. WA</label><input id="cWa"></div><div class="field" id="nikField"><label>NIK</label><input id="cNik" inputmode="numeric"></div><div class="field" id="simField"><label>SIM A</label><input id="cSim"></div><div class="field"><label>Status Pelanggan</label><select id="cStatus"><option>Aktif</option><option>Nonaktif</option><option>Blacklist</option></select></div>
 </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Simpan Pelanggan</button><button class="btn" type="button" onclick="resetCust()">Batal</button></div></form></div>
-<div class="card" style="margin-top:14px"><div class="tablewrap"><table><thead><tr><th style="width:42px;text-align:center">No.</th><th>ID Pelanggan</th><th>Nama</th><th>Alamat</th><th>No. WA</th><th>NIK</th><th>SIM A</th><th>Status</th><th class="no-print">Aksi</th></tr></thead><tbody id="custRows"></tbody></table></div></div>
+<div class="card customer-list-card" style="margin-top:14px"><div class="tablewrap"><table class="customer-compact-table"><thead><tr><th style="width:34px;text-align:center">No.</th><th>ID Pelanggan</th><th>Nama</th><th>Alamat</th><th>No. WA</th><th>NIK</th><th>SIM A</th><th>Status</th><th class="no-print">Aksi</th></tr></thead><tbody id="custRows"></tbody></table></div><div id="custPagination" class="customer-pagination"></div></div>
 </section>
 <section id="armada" class="hidden">
 <div class="toolbar"><h2>Data Armada</h2></div>
@@ -1365,8 +1821,15 @@ main{padding-left:178px!important;padding-right:14px!important}
 
 <div class="field"><label>Bagian Mitra per Hari (Rp)</label><input id="aPartnerRate" type="number" min="0" value="0"></div>
 </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Simpan Armada</button><button class="btn" type="button" onclick="resetCar()">Batal</button></div></form></div>
-<div class="card no-print" style="margin-top:14px"><div class="field"><label for="qCar">Pencarian Armada</label><input id="qCar" placeholder="Cari ID, merk, jenis, klasifikasi, polisi, kepemilikan, mitra, status..."></div></div>
-<div class="card" style="margin-top:14px"><div class="tablewrap"><table><thead><tr><th>ID Armada</th><th>Merk</th><th>Jenis / Klasifikasi</th><th>No. Polisi</th><th>Transmisi</th><th>Status</th><th>Bagian Mitra / Hari</th><th class="no-print">Aksi</th></tr></thead><tbody id="carRows"></tbody></table></div></div>
+<div class="row no-print" style="margin-top:10px;gap:8px;justify-content:flex-start"><button type="button" class="btn small" onclick="openPrivateFleetModal()">Daftar Armada Pribadi</button><button type="button" class="btn small" onclick="openPartnerFleetModal()">Daftar Armada Mitra</button></div>
+<div class="card fleet-list-card fleet-list-inline-hidden" style="margin-top:14px">
+  <h3 class="fleet-list-title">Daftar Armada Pribadi</h3>
+  <div class="tablewrap"><table class="fleet-compact-table"><thead><tr><th>ID Armada</th><th>Merk</th><th>Jenis / Klasifikasi</th><th>No. Polisi</th><th>Transmisi</th><th>Status</th><th>Bagian Mitra / Hari</th><th class="no-print">Aksi</th></tr></thead><tbody id="carRowsPrivate"></tbody></table></div>
+</div>
+<div class="card fleet-list-card fleet-list-inline-hidden" style="margin-top:10px">
+  <h3 class="fleet-list-title">Daftar Armada Mitra</h3>
+  <div class="tablewrap"><table class="fleet-compact-table"><thead><tr><th>ID Armada</th><th>Merk</th><th>Jenis / Klasifikasi</th><th>No. Polisi</th><th>Transmisi</th><th>Status</th><th>Bagian Mitra / Hari</th><th class="no-print">Aksi</th></tr></thead><tbody id="carRowsPartner"></tbody></table></div>
+</div>
 </section>
 <section id="booking" class="hidden">
 <h2 id="bookingFormToggle" role="button" tabindex="0" aria-expanded="false" onclick="toggleBookingFormContainer()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBookingFormContainer()}" style="cursor:pointer" title="Klik untuk menampilkan atau menyembunyikan formulir">Booking Sewa <span id="bookingFormChevron" style="font-size:12px;color:var(--gold)">＋</span></h2><div class="card no-print hidden" id="bookingFormContainer"><form id="bookForm"><input type="hidden" id="bookEdit"><div class="formgrid">
@@ -1405,7 +1868,7 @@ main{padding-left:178px!important;padding-right:14px!important}
 <section id="pembayaran" class="hidden">
 <h2>Pencatatan Pembayaran</h2><div class="card no-print"><form id="payForm"><div class="formgrid">
 <div class="field"><label>Pelanggan</label><select id="pCustomer" required><option value="">Pilih pelanggan yang belum lunas</option></select></div><div class="field"><label>Daftar ID Booking Belum Lunas</label><div id="pBookingList" class="notice">Pilih pelanggan untuk melihat daftar booking dan sisa tagihan.</div></div><div class="field"><label>Biaya Lain-lain (Rp)</label><input id="pOtherCost" type="number" min="0" step="1" value="0" placeholder="0"></div><div class="field"><label>ID Booking untuk Biaya Lain-lain</label><select id="pOtherCostBooking"><option value="">Pilih ID Booking</option></select></div><div class="field"><label>Keterangan Biaya Lain-lain</label><input id="pOtherCostNote" type="text" maxlength="250" placeholder="Masukkan keterangan biaya lain-lain"></div><div class="field" id="pEditingBookingField" hidden><label>ID Booking yang Diedit</label><input id="pBookingEditDisplay" readonly></div><div class="field"><label>Total Sisa Tagihan</label><input id="pBill" readonly></div><div class="field" hidden><label>Booking</label><select id="pBook"></select></div><div class="field" hidden><label>Pelanggan</label><input id="pCust" readonly></div><div class="field"><label>Total Pembayaran Diterima (Rp)</label><input id="pAmount" type="number" min="0" step="1" required></div><div class="field"><label>Tanggal Pembayaran</label><input id="pDate" type="date" required></div><div class="field"><label>Status Pembayaran</label><input id="pStatus" readonly></div><div class="field"><label>Sisa Tagihan</label><input id="pRemain" readonly></div></div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Catat Pembayaran</button><button class="btn" type="button" onclick="cancelPaymentEntry()">Batal</button><button class="btn hidden" type="button" id="cancelPaymentEditBtn" onclick="cancelPaymentEdit()">Batal Edit</button><button class="btn" type="button" onclick="printLatestPaymentForSelectedBooking()">Cetak Nota</button></div></form></div>
-<div class="card" style="margin-top:14px"><h3>Riwayat Pembayaran</h3><div class="field no-print" style="margin:10px 0 14px"><label for="qPaymentHistory">Search Riwayat Pembayaran</label><input id="qPaymentHistory" type="search" placeholder="Cari ID pelanggan, nama pelanggan, ID booking, ID pembayaran..." oninput="render()"></div><div class="tablewrap"><table><thead><tr><th>Pilih</th><th>ID Pelanggan</th><th>Nama Pelanggan</th><th>ID Booking</th><th>Total Pembayaran Seluruh Booking</th><th>Status</th><th>Rincian Pembayaran</th><th class="no-print">Aksi</th></tr></thead><tbody id="payRows"></tbody></table></div></div>
+<div class="card" style="margin-top:14px"><h3>Riwayat Pembayaran</h3><div class="row no-print payment-history-filters" style="margin:10px 0 14px;gap:10px;align-items:end;flex-wrap:wrap"><div class="field" style="margin:0;min-width:170px;max-width:220px"><label for="paymentHistoryMonth">Bulan Pembayaran</label><input id="paymentHistoryMonth" type="month" value="2026-11" onchange="render()"></div><div class="field" style="margin:0;flex:1;min-width:220px"><label for="qPaymentHistory">Cari Riwayat Pembayaran</label><input id="qPaymentHistory" type="search" placeholder="Cari ID pelanggan, nama, ID booking, ID pembayaran..." oninput="render()"></div></div><div class="tablewrap"><table><thead><tr><th>Pilih</th><th>ID Pelanggan</th><th>Nama Pelanggan</th><th>ID Booking</th><th>Total Pembayaran Seluruh Booking</th><th>Status</th><th>Rincian Pembayaran</th><th class="no-print">Aksi</th></tr></thead><tbody id="payRows"></tbody></table></div></div>
 </section>
 <section id="daftarTagihanDriver" class="hidden">
 <h2>Daftar Tagihan Driver</h2>
@@ -1800,7 +2263,7 @@ main{padding-left:178px!important;padding-right:14px!important}
 <section id="changelog" class="hidden">
   <div class="toolbar" style="align-items:center;gap:12px;flex-wrap:wrap">
     <div><h2 style="margin:0">Riwayat Perubahan Aplikasi</h2><p class="muted" style="margin:6px 0 0">Catatan pembaruan fitur, perbaikan, dan perubahan Alfa Prima Rent Car.</p></div>
-    <span class="badge">Versi saat ini: 1.0.5</span>
+    <span class="badge">Versi saat ini: 1.0.6</span>
   </div>
   <div class="card no-print" style="margin:14px 0">
     <div class="formgrid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));align-items:end">
@@ -1929,6 +2392,7 @@ function toggleDashboardIncomeDetails(){
 }
 
 const APP_CHANGELOG = [
+ {version:'1.0.6',date:'2026-11-25',title:'Pembaruan Antarmuka & Manajemen Armada/Pelanggan',items:['Tampilan form dan tabel data pelanggan ringkas dengan pagination 10 data per halaman.','Tampilan form armada ringkas, pemisahan armada pribadi & mitra via popup modal cepat.','Penyempurnaan form pembayaran dan filter periode bulan pada riwayat pembayaran.','Penyempurnaan tata letak form dan tabel riwayat pengeluaran yang lebih responsif.']},
  {version:'1.0.5',date:'2026-11-16',title:'Riwayat Pengeluaran Bulanan',items:['Riwayat pengeluaran otomatis menampilkan bulan berjalan.','Filter bulan dan tahun untuk melihat periode lain.','Total pengeluaran mengikuti bulan dan pencarian yang dipilih.']},
  {version:'1.0.4',date:'2026-11-16',title:'Perbaikan Timeline Armada dan Edit Booking',items:['Tombol tambah booking pada timeline menggunakan ikon plus.','Batang jadwal timeline diarahkan untuk membuka formulir edit booking.','Perbaikan navigasi agar formulir edit booking terbuka langsung.']},
  {version:'1.0.3',date:'2026-11-13',title:'Perbaikan Pemulihan Backup',items:['Validasi struktur file backup JSON.','Dukungan data tambahan seperti driver dan pembayaran driver.','Perbaikan status sinkronisasi saat pemulihan data.']},
@@ -2080,6 +2544,63 @@ function delCar(id){
   if(db.bookings.some(b=>bookingUnitsOf(b).some(u=>u.carId===id))){alert('Armada sudah digunakan dalam booking dan tidak dapat dihapus. Ubah status menjadi Nonaktif jika tidak digunakan lagi.');return;}
   if(confirm('Hapus data armada '+id+'?')){db.cars=db.cars.filter(x=>x.id!==id);save();}
 }
+
+function openPrivateFleetModal(){
+  const modal=$('privateFleetModal');
+  if(!modal)return;
+  $('privateFleetSearch').value='';
+  renderPrivateFleetRows();
+  modal.classList.remove('hidden');
+  setTimeout(()=>$('privateFleetSearch')?.focus(),30);
+}
+function closePrivateFleetModal(){
+  $('privateFleetModal')?.classList.add('hidden');
+}
+function renderPrivateFleetRows(){
+  const q=String($('privateFleetSearch')?.value||'').trim().toLowerCase();
+  const rows=(db.cars||[]).filter(c=>(c.ownership||'sendiri')!=='mitra').filter(c=>{
+    const text=[c.id,c.merk,c.jenis,c.vehicleClass,c.plat,c.trans,c.status].join(' ').toLowerCase();
+    return !q||text.includes(q);
+  });
+  $('privateFleetRows').innerHTML=rows.map(c=>`<tr>
+    <td>${esc(c.id)}</td><td>${esc(c.merk||'-')}</td><td>${esc(c.jenis||'-')}</td>
+    <td>${esc(c.vehicleClass||'-')}</td><td>${esc(c.plat||'-')}</td>
+    <td>${esc(c.trans||'-')}</td><td><span class="badge">${esc(c.status||'-')}</span></td>
+    <td class="no-print"><button type="button" class="btn small" onclick="closePrivateFleetModal();editCar('${String(c.id).replace(/'/g,"\\'")}')">Edit</button></td>
+  </tr>`).join('')||'<tr><td colspan="8" class="muted">Tidak ada armada pribadi yang sesuai pencarian.</td></tr>';
+  $('privateFleetCount').textContent=`Menampilkan ${rows.length} armada pribadi`;
+}
+
+function openPartnerFleetModal(){
+  const modal=$('partnerFleetModal');
+  if(!modal)return;
+  $('partnerFleetSearch').value='';
+  renderPartnerFleetRows();
+  modal.classList.remove('hidden');
+  setTimeout(()=>$('partnerFleetSearch')?.focus(),30);
+}
+function closePartnerFleetModal(){
+  $('partnerFleetModal')?.classList.add('hidden');
+}
+function renderPartnerFleetRows(){
+  const q=String($('partnerFleetSearch')?.value||'').trim().toLowerCase();
+  const rows=(db.cars||[]).filter(c=>(c.ownership||'sendiri')==='mitra').filter(c=>{
+    const partner=(db.partners||[]).find(p=>String(p.id)===String(c.partnerId));
+    const text=[c.id,c.merk,c.jenis,c.vehicleClass,c.plat,c.trans,c.status,c.partnerId,partner?.name,partner?.nama].join(' ').toLowerCase();
+    return !q||text.includes(q);
+  });
+  $('partnerFleetRows').innerHTML=rows.map(c=>`<tr>
+    <td>${esc(c.id)}</td><td>${esc(c.merk||'-')}</td><td>${esc(c.jenis||'-')}</td>
+    <td>${esc(c.vehicleClass||'-')}</td><td>${esc(c.plat||'-')}</td>
+    <td>${esc(c.trans||'-')}</td><td><span class="badge">${esc(c.status||'-')}</span></td>
+    <td>${money(Number(c.partnerRate||0))}</td>
+    <td class="no-print"><button type="button" class="btn small" onclick="closePartnerFleetModal();editCar('${String(c.id).replace(/'/g,"\\'")}')">Edit</button></td>
+  </tr>`).join('')||'<tr><td colspan="9" class="muted">Tidak ada armada mitra.</td></tr>';
+  $('partnerFleetCount').textContent=rows.length+' armada mitra';
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePrivateFleetModal();closePartnerFleetModal();}});
+
 
 function bookingUnitOptions(index,card){
   let type=card?.querySelector('.bu-ownership')?.value||'sendiri',partnerId=card?.querySelector('.bu-partner')?.value||'';
@@ -3391,8 +3912,9 @@ if(!window.__fleetDispatchClock){
  window.__fleetDispatchClock=setInterval(updateFleetDispatchVisibility,15000);
 }
 
-function render(){if($('aPartner'))$('aPartner').innerHTML='<option value="">Pilih mitra (jika milik mitra)</option>'+db.partners.map(m=>`<option value="${esc(m.id)}">${esc(m.name)}</option>`).join('');let q=($('qCust')?.value||'').toLowerCase();$('custRows').innerHTML=db.customers.filter(x=>(x.id+x.nama+x.wa).toLowerCase().includes(q)).map((x,index)=>`<tr><td style="text-align:center">${index+1}</td><td>${esc(x.id)}</td><td>${esc(x.nama)}</td><td>${esc(x.alamat)}</td><td>${esc(x.wa)}</td><td>${esc(x.nik)}</td><td>${esc(x.sim)}</td><td><span class="badge ${x.status==='Aktif'?'ok':x.status==='Blacklist'?'bad':'warn'}">${esc(x.status)}</span></td><td class="no-print"><div class="actions"><button class="btn small" onclick="editCust('${x.id}')">Edit</button>${currentUser?.role==='admin'?`<button class="btn small danger" onclick="delCust('${x.id}')">Hapus</button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="9" class="muted">Belum ada data pelanggan.</td></tr>';
-let qc=($('qCar')?.value||'').trim().toLowerCase();let filteredCars=db.cars.filter(x=>{let owner=(x.ownership||'sendiri')==='mitra'?'mitra':'pribadi';let partner=db.partners.find(m=>m.id===x.partnerId);let keywords=[x.id,x.merk,x.jenis,x.vehicleClass,x.plat,x.trans,x.status,owner,(owner==='mitra'?'milik mitra':'milik pribadi'),partner?.name,partner?.nama,x.partnerId,x.partnerRate].filter(v=>v!==undefined&&v!==null).join(' ').toLowerCase();return !qc||keywords.includes(qc)});let carRow=x=>`<tr><td>${esc(x.id)}</td><td>${esc(x.merk)}</td><td>${esc(x.jenis)}<br><small>${esc(x.vehicleClass||'-')}</small></td><td>${esc(x.plat)}</td><td>${esc(x.trans)}</td><td><span class="badge">${esc(x.status)}</span></td><td>${(x.ownership||'sendiri')==='mitra'?money(Number(x.partnerRate||0)):'-'}</td><td class="no-print"><div class="actions"><button class="btn small" onclick="editCar('${x.id}')">Edit</button>${currentUser?.role==='admin'?`<button class="btn small danger" onclick="delCar('${x.id}')">Hapus</button>`:''}</div></td></tr>`;$('carRows').innerHTML=(filteredCars.length?['sendiri','mitra'].map(type=>{let group=filteredCars.filter(x=>(x.ownership||'sendiri')===type);return group.length?`<tr><td colspan="8" style="background:#263750;color:var(--gold);font-weight:bold">${type==='sendiri'?'ARMADA MILIK PRIBADI':'ARMADA MILIK MITRA'}</td></tr>`+group.map(carRow).join(''):''}).join(''):'<tr><td colspan="8" class="muted">Belum ada data armada.</td></tr>');
+function changeCustPage(delta){window.custPage=Math.max(1,Number(window.custPage||1)+Number(delta||0));render();}
+function render(){if($('aPartner'))$('aPartner').innerHTML='<option value="">Pilih mitra (jika milik mitra)</option>'+db.partners.map(m=>`<option value="${esc(m.id)}">${esc(m.name)}</option>`).join('');let q=($('qCust')?.value||'').toLowerCase();let filteredCustomers=db.customers.filter(x=>(x.id+x.nama+x.wa).toLowerCase().includes(q));const custPageSize=10;const custPageCount=Math.max(1,Math.ceil(filteredCustomers.length/custPageSize));window.custPage=Math.min(Math.max(1,Number(window.custPage||1)),custPageCount);const custStart=(window.custPage-1)*custPageSize;const visibleCustomers=filteredCustomers.slice(custStart,custStart+custPageSize);$('custRows').innerHTML=visibleCustomers.map((x,index)=>`<tr><td style="text-align:center;color:var(--muted)">${custStart+index+1}</td><td>${esc(x.id)}</td><td>${esc(x.nama)}</td><td>${esc(x.alamat)}</td><td>${esc(x.wa)}</td><td>${esc(x.nik)}</td><td>${esc(x.sim)}</td><td><span class="badge ${x.status==='Aktif'?'ok':x.status==='Blacklist'?'bad':'warn'}">${esc(x.status)}</span></td><td class="no-print"><div class="actions"><button class="btn small" onclick="editCust('${x.id}')">Edit</button>${currentUser?.role==='admin'?`<button class="btn small danger" onclick="delCust('${x.id}')">Hapus</button>`:''}</div></td></tr>`).join('')||'<tr><td colspan="9" class="muted">Belum ada data pelanggan.</td></tr>';const pager=$('custPagination');if(pager)pager.innerHTML=`<span>Menampilkan ${filteredCustomers.length?custStart+1:0}–${Math.min(custStart+custPageSize,filteredCustomers.length)} dari ${filteredCustomers.length} pelanggan</span><button class="btn small" onclick="changeCustPage(-1)" ${window.custPage<=1?'disabled':''}>Sebelumnya</button><strong>Halaman ${window.custPage} / ${custPageCount}</strong><button class="btn small" onclick="changeCustPage(1)" ${window.custPage>=custPageCount?'disabled':''}>Berikutnya</button>`;
+let qc=($('qCar')?.value||'').trim().toLowerCase();let filteredCars=db.cars.filter(x=>{let owner=(x.ownership||'sendiri')==='mitra'?'mitra':'pribadi';let partner=db.partners.find(m=>m.id===x.partnerId);let keywords=[x.id,x.merk,x.jenis,x.vehicleClass,x.plat,x.trans,x.status,owner,(owner==='mitra'?'milik mitra':'milik pribadi'),partner?.name,partner?.nama,x.partnerId,x.partnerRate].filter(v=>v!==undefined&&v!==null).join(' ').toLowerCase();return !qc||keywords.includes(qc)});let carRow=x=>`<tr><td>${esc(x.id)}</td><td>${esc(x.merk)}</td><td>${esc(x.jenis)}<br><small>${esc(x.vehicleClass||'-')}</small></td><td>${esc(x.plat)}</td><td>${esc(x.trans)}</td><td><span class="badge">${esc(x.status)}</span></td><td>${(x.ownership||'sendiri')==='mitra'?money(Number(x.partnerRate||0)):'-'}</td><td class="no-print"><div class="actions"><button class="btn small" onclick="editCar('${x.id}')">Edit</button>${currentUser?.role==='admin'?`<button class="btn small danger" onclick="delCar('${x.id}')">Hapus</button>`:''}</div></td></tr>`;const privateCars=filteredCars.filter(x=>(x.ownership||'sendiri')!=='mitra');const partnerCars=filteredCars.filter(x=>(x.ownership||'sendiri')==='mitra');if($('carRowsPrivate'))$('carRowsPrivate').innerHTML=privateCars.map(carRow).join('')||'<tr><td colspan="8" class="muted">Belum ada armada pribadi.</td></tr>';if($('carRowsPartner'))$('carRowsPartner').innerHTML=partnerCars.map(carRow).join('')||'<tr><td colspan="8" class="muted">Belum ada armada mitra.</td></tr>';if($('carRows'))$('carRows').innerHTML=(filteredCars.length?['sendiri','mitra'].map(type=>{let group=filteredCars.filter(x=>(x.ownership||'sendiri')===type);return group.length?`<tr><td colspan="8" style="background:#263750;color:var(--gold);font-weight:bold">${type==='sendiri'?'ARMADA MILIK PRIBADI':'ARMADA MILIK MITRA'}</td></tr>`+group.map(carRow).join(''):''}).join(''):'<tr><td colspan="8" class="muted">Belum ada data armada.</td></tr>');
 
 if($('fleetTimelineMonth')){
  const currentMonth=(()=>{const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')})();
@@ -3538,11 +4060,14 @@ const selectedCustomer=$('pCustomer')?.value||'';const unpaidCustomerIds=[...new
 $('driverRows').innerHTML=db.drivers.map(d=>`<tr><td>${esc(d.id)}</td><td>${esc(d.name)}</td><td>${esc(d.wa||'')}</td><td>${esc(d.address||'')}</td><td>${esc(d.license||'')}</td><td>${esc(d.status||'Aktif')}</td><td><button class="btn small" onclick="editDriver('${d.id}')">Edit</button>${currentUser?.role==='admin'?`<button class="btn small danger" onclick="deleteDriver('${d.id}')">Hapus</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7">Belum ada driver.</td></tr>';
 renderDriverBills();
 const paymentQuery=String($('qPaymentHistory')?.value||'').trim().toLowerCase();
+const paymentHistoryMonth=String($('paymentHistoryMonth')?.value||'');
 const filteredPaymentHistory=db.payments.filter(p=>{
   const cid=String(p.customerId||'');
   const customer=cust(cid)||{};
+  const paymentMonth=String(p.date||'').slice(0,7);
+  const monthMatch=!paymentHistoryMonth||paymentMonth===paymentHistoryMonth;
   const searchable=[cid,customer.nama,customer.wa,p.bookingId,p.id,p.date,formatDateDMY(p.date),p.amount].join(' ').toLowerCase();
-  return !paymentQuery||searchable.includes(paymentQuery);
+  return monthMatch&&(!paymentQuery||searchable.includes(paymentQuery));
 });
 const paymentCustomerIds=[...new Set(filteredPaymentHistory.map(p=>String(p.customerId||'')))].sort((a,b)=>a.localeCompare(b));
 $('payRows').innerHTML=paymentCustomerIds.map(cid=>{let items=filteredPaymentHistory.filter(p=>String(p.customerId||'')===cid);let bookingIds=[...new Set(items.map(p=>p.bookingId))];let totalPaid=items.reduce((sum,p)=>sum+Number(p.amount||0),0);let allSettled=bookingIds.every(id=>statusBook(book(id)||{id,total:0})==='Lunas');let details=items.map(p=>`<div style="margin:6px 0;padding:6px;border-bottom:1px solid var(--line)"><div><b>${esc(p.bookingId)}</b> • ${esc(p.id)} • ${money(p.amount)} • ${formatDateDMY(p.date)}</div><div class="row no-print" style="gap:5px;margin-top:5px"><button class="btn small" onclick="editPayment('${esc(p.id)}')">Edit</button></div></div>`).join('');return `<tr><td class="no-print"><input type="checkbox" class="payment-customer-check" data-customer="${esc(cid)}" aria-label="Pilih pelanggan ${esc(cid)}"></td><td>${esc(cid)}</td><td>${esc(cust(cid)?.nama||'')}</td><td>${bookingIds.map(esc).join('<br>')}</td><td><strong>${money(totalPaid)}</strong></td><td><span class="badge ${allSettled?'ok':'warn'}">${allSettled?'Lunas':'Ada DP / belum lunas'}</span></td><td>${details}</td><td class="no-print"><button class="btn small" onclick="printCustomerPaymentNote('${esc(cid)}')">Cetak Nota</button></td></tr>`}).join('')||'<tr><td colspan="8" class="muted">Belum ada pembayaran.</td></tr>';
@@ -3998,7 +4523,7 @@ async function clearAll(){
     alert('Gagal menghapus data: ' + err.message);
   }
 }
-['qCust','qCar','qBook'].forEach(id=>$(id).addEventListener('input',render));
+$('qCust')?.addEventListener('input',()=>{window.custPage=1;render()});['qCar','qBook'].forEach(id=>$(id)?.addEventListener('input',render));
 $('qUnpaidCustomer')?.addEventListener('input',render);
 
 function getDefaultActiveMonth() {
@@ -4816,4 +5341,43 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
-</script></body></html>
+</script>
+<div id="privateFleetModal" class="hidden" onclick="if(event.target===this)closePrivateFleetModal()">
+  <div class="private-fleet-dialog">
+    <div class="private-fleet-head">
+      <h3 style="margin:0;color:var(--gold)">Armada Milik Pribadi</h3>
+      <div class="private-fleet-tools">
+        <input id="privateFleetSearch" type="search" placeholder="Cari ID, merk, model, atau no. polisi..." oninput="renderPrivateFleetRows()">
+        <button type="button" class="btn small private-fleet-close" onclick="closePrivateFleetModal()" aria-label="Tutup" title="Tutup">×</button>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>ID Armada</th><th>Merk</th><th>Nama / Model</th><th>Klasifikasi</th><th>No. Polisi</th><th>Transmisi</th><th>Status</th><th class="no-print">Aksi</th></tr></thead>
+        <tbody id="privateFleetRows"></tbody>
+      </table>
+    </div>
+    <div id="privateFleetCount" class="muted" style="font-size:11px;margin-top:8px"></div>
+  </div>
+</div>
+
+<div id="partnerFleetModal" class="hidden" onclick="if(event.target===this)closePartnerFleetModal()">
+  <div class="private-fleet-dialog">
+    <div class="private-fleet-head">
+      <h3 style="margin:0;color:var(--gold)">Armada Milik Mitra</h3>
+      <div class="private-fleet-tools">
+        <input id="partnerFleetSearch" type="search" placeholder="Cari ID, merk, model, mitra, atau no. polisi..." oninput="renderPartnerFleetRows()">
+        <button type="button" class="btn small private-fleet-close" onclick="closePartnerFleetModal()" aria-label="Tutup" title="Tutup">×</button>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>ID Armada</th><th>Merk</th><th>Nama / Model</th><th>Klasifikasi</th><th>No. Polisi</th><th>Transmisi</th><th>Status</th><th>Bagian Mitra / Hari</th><th class="no-print">Aksi</th></tr></thead>
+        <tbody id="partnerFleetRows"></tbody>
+      </table>
+    </div>
+    <div id="partnerFleetCount" class="muted" style="font-size:11px;margin-top:8px"></div>
+  </div>
+</div>
+
+</body></html>
