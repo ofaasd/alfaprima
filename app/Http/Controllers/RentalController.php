@@ -110,6 +110,7 @@ class RentalController extends Controller
             'user' => $user ? [
                 'id' => $user->id,
                 'username' => $user->username,
+                'name' => $user->name,
                 'role' => $user->role,
                 'active' => (bool)$user->active,
             ] : null,
@@ -246,6 +247,7 @@ class RentalController extends Controller
                 'user' => [
                     'id' => $user->id,
                     'username' => $user->username,
+                    'name' => $user->name,
                     'role' => $user->role,
                     'active' => (bool)$user->active,
                 ],
@@ -285,7 +287,22 @@ class RentalController extends Controller
     }
 
     /**
-     * Admin: List users
+     * Restrict driver role from modifying transactions
+     */
+    protected function forbidDriver(): ?\Illuminate\Http\JsonResponse
+    {
+        $role = Auth::user()?->role;
+        if ($role === 'driver' || $role === 'drive') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses ditolak. Akun role driver hanya memiliki izin untuk melihat Dashboard.',
+            ], 403);
+        }
+        return null;
+    }
+
+    /**
+     * Admin: List Users
      */
     public function listUsers()
     {
@@ -293,12 +310,14 @@ class RentalController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $users = User::select('id', 'username', 'role', 'active')->orderBy('id')->get();
+        $users = User::select('id', 'username', 'name', 'role', 'active', 'created_at')
+            ->orderBy('id')
+            ->get();
         return response()->json($users);
     }
 
     /**
-     * Admin: Create Employee Account
+     * Admin: Create User Account (Admin, Karyawan, Driver)
      */
     public function createUser(Request $request)
     {
@@ -307,20 +326,96 @@ class RentalController extends Controller
         }
 
         $request->validate([
-            'username' => 'required|string|min:4|unique:users,username',
-            'password' => 'required|string|min:10',
+            'username' => 'required|string|min:3|max:50|unique:users,username',
+            'password' => 'required|string|min:6',
+            'role' => 'nullable|string|in:admin,karyawan,driver,drive',
+            'name' => 'nullable|string|max:100',
         ]);
 
+        $role = strtolower($request->input('role', 'karyawan'));
+        if ($role === 'drive') {
+            $role = 'driver';
+        }
+
         $user = User::create([
-            'username' => $request->username,
-            'name' => $request->username,
-            'email' => $request->username . '@alfarent.local',
+            'username' => trim($request->username),
+            'name' => trim($request->name ?: $request->username),
+            'email' => trim($request->username) . '@alfarent.local',
             'password' => Hash::make($request->password),
-            'role' => 'karyawan',
+            'role' => $role,
             'active' => true,
         ]);
 
         return response()->json(['success' => true, 'user' => $user]);
+    }
+
+    /**
+     * Admin: Update User Account
+     */
+    public function updateUser(Request $request, $id)
+    {
+        if (Auth::user()?->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'username' => 'required|string|min:3|max:50|unique:users,username,' . $user->id,
+            'password' => 'nullable|string|min:6',
+            'role' => 'nullable|string|in:admin,karyawan,driver,drive',
+            'name' => 'nullable|string|max:100',
+            'active' => 'nullable|boolean',
+        ]);
+
+        // Akun default alfaprima selalu berstatus admin dan aktif
+        if (strtolower($user->username) === 'alfaprima') {
+            $user->role = 'admin';
+            $user->active = true;
+        } else {
+            if ($request->has('role')) {
+                $role = strtolower($request->role);
+                $user->role = ($role === 'drive') ? 'driver' : $role;
+            }
+            if ($request->has('active')) {
+                $user->active = (bool)$request->active;
+            }
+        }
+
+        $user->username = trim($request->username);
+        if ($request->has('name')) {
+            $user->name = trim($request->name ?: $request->username);
+        }
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+        $user->save();
+
+        return response()->json(['success' => true, 'user' => $user]);
+    }
+
+    /**
+     * Admin: Delete User Account
+     */
+    public function deleteUser($id)
+    {
+        if (Auth::user()?->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $user = User::findOrFail($id);
+
+        if (strtolower($user->username) === 'alfaprima') {
+            return response()->json(['message' => 'Akun utama "alfaprima" tidak dapat dihapus.'], 400);
+        }
+
+        if ($user->id === Auth::id()) {
+            return response()->json(['message' => 'Anda tidak dapat menghapus akun yang sedang aktif digunakan.'], 400);
+        }
+
+        $user->delete();
+
+        return response()->json(['success' => true, 'message' => 'Pengguna berhasil dihapus.']);
     }
 
     /**
@@ -333,8 +428,8 @@ class RentalController extends Controller
         }
 
         $user = User::findOrFail($id);
-        if ($user->role === 'admin') {
-            return response()->json(['message' => 'Akun admin tidak dapat dinonaktifkan.'], 400);
+        if (strtolower($user->username) === 'alfaprima') {
+            return response()->json(['message' => 'Akun admin "alfaprima" tidak dapat dinonaktifkan.'], 400);
         }
 
         $user->active = (bool) $request->input('active', !$user->active);
@@ -348,6 +443,7 @@ class RentalController extends Controller
      */
     public function saveCustomer(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $id = $request->id ?: $this->getNextId(Customer::class, 'PLG-');
 
         $customer = Customer::updateOrCreate(
@@ -370,6 +466,7 @@ class RentalController extends Controller
      */
     public function deleteCustomer($id)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus data.'], 403);
         }
@@ -387,6 +484,7 @@ class RentalController extends Controller
      */
     public function saveCar(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $id = $request->id ?: $this->getNextId(Car::class, 'ARM-');
 
         $car = Car::updateOrCreate(
@@ -412,6 +510,7 @@ class RentalController extends Controller
      */
     public function deleteCar($id)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus data.'], 403);
         }
@@ -429,6 +528,7 @@ class RentalController extends Controller
      */
     public function saveDriver(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $id = $request->id ?: $this->getNextId(Driver::class, 'DRV-');
 
         $driver = Driver::updateOrCreate(
@@ -450,6 +550,7 @@ class RentalController extends Controller
      */
     public function deleteDriver($id)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus data.'], 403);
         }
@@ -467,6 +568,7 @@ class RentalController extends Controller
      */
     public function savePartner(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $id = $request->id ?: $this->getNextId(Partner::class, 'MTR-');
 
         $partner = Partner::updateOrCreate(
@@ -489,6 +591,7 @@ class RentalController extends Controller
      */
     public function saveBooking(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $editId = $request->id;
         $customerId = $request->customer_id;
         $carId = $request->car_id;
@@ -591,6 +694,7 @@ class RentalController extends Controller
      */
     public function deleteBooking($id)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus data.'], 403);
         }
@@ -609,6 +713,7 @@ class RentalController extends Controller
      */
     public function savePayment(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $booking = Booking::find($request->booking_id);
         $amount = (float) $request->amount;
 
@@ -647,6 +752,7 @@ class RentalController extends Controller
      */
     public function updatePayment(Request $request, $id)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat mengubah pembayaran.'], 403);
         }
@@ -684,6 +790,7 @@ class RentalController extends Controller
      */
     public function saveExpense(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $amount = (float) $request->amount;
         if ($amount <= 0) {
             return response()->json(['message' => 'Nominal pengeluaran harus lebih dari 0.'], 422);
@@ -708,6 +815,7 @@ class RentalController extends Controller
      */
     public function deleteExpense($id)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus data.'], 403);
         }
@@ -721,6 +829,7 @@ class RentalController extends Controller
      */
     public function savePartnerPayment(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $amount = (float) $request->amount;
         if ($amount <= 0) {
             return response()->json(['message' => 'Nominal harus lebih dari 0.'], 422);
@@ -746,6 +855,7 @@ class RentalController extends Controller
      */
     public function saveDriverPayment(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $amount = (float) $request->amount;
         if ($amount <= 0) {
             return response()->json(['message' => 'Nominal harus lebih dari 0.'], 422);
@@ -773,6 +883,7 @@ class RentalController extends Controller
      */
     public function saveOtherCharge(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $amount = (float) $request->amount;
         if ($amount <= 0) {
             return response()->json(['message' => 'Nominal harus lebih dari 0.'], 422);
@@ -797,6 +908,7 @@ class RentalController extends Controller
      */
     public function saveAccount(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $request->validate([
             'code' => 'required|string',
             'name' => 'required|string',
@@ -821,6 +933,7 @@ class RentalController extends Controller
      */
     public function deletePayment($id)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus pembayaran.'], 403);
         }
@@ -845,6 +958,7 @@ class RentalController extends Controller
      */
     public function saveAll(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $data = $request->all();
         if (!is_array($data)) {
             return response()->json(['message' => 'Data tidak valid.'], 422);
@@ -1175,6 +1289,7 @@ class RentalController extends Controller
      */
     public function saveJournal(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $amount = (float) $request->amount;
         if ($amount <= 0 || $request->debit_account === $request->credit_account) {
             return response()->json(['message' => 'Nominal harus positif dan akun debit/kredit harus berbeda.'], 422);
@@ -1201,6 +1316,7 @@ class RentalController extends Controller
      */
     public function backupJson()
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $data = [
             'customers' => Customer::all(),
             'cars' => Car::all(),
@@ -1225,6 +1341,7 @@ class RentalController extends Controller
      */
     public function restoreJson(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat memulihkan data.'], 403);
         }
@@ -1272,6 +1389,7 @@ class RentalController extends Controller
      */
     public function exportCsv(): StreamedResponse
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="laporan_booking_alfa_prima.csv"',
@@ -1322,6 +1440,7 @@ class RentalController extends Controller
      */
     public function clearAll()
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus seluruh data.'], 403);
         }
@@ -1370,6 +1489,7 @@ class RentalController extends Controller
      */
     public function saveSettings(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['success' => false, 'message' => 'Hanya admin yang dapat mengubah pengaturan.'], 403);
         }
@@ -1410,6 +1530,7 @@ class RentalController extends Controller
      */
     public function uploadSignature(Request $request)
     {
+        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['success' => false, 'message' => 'Hanya admin yang dapat mengunggah tanda tangan.'], 403);
         }

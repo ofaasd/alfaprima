@@ -327,5 +327,113 @@ class RentalTest extends TestCase
             'is_signed' => 0,
         ]);
     }
-}
 
+    public function test_admin_can_manage_users_and_create_driver(): void
+    {
+        $admin = User::where('username', 'alfaprima')->first();
+
+        // 1. Admin creates a driver user
+        $response = $this->actingAs($admin)->postJson('/api/users', [
+            'username' => 'driver1',
+            'name' => 'Pak Supri (Driver)',
+            'role' => 'driver',
+            'password' => 'driverpass123',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'user' => [
+                'username' => 'driver1',
+                'role' => 'driver',
+            ]
+        ]);
+        $this->assertDatabaseHas('users', [
+            'username' => 'driver1',
+            'role' => 'driver',
+            'active' => 1,
+        ]);
+
+        $driver = User::where('username', 'driver1')->first();
+
+        // 2. Admin updates the user
+        $updateResp = $this->actingAs($admin)->putJson('/api/users/' . $driver->id, [
+            'username' => 'driver1',
+            'name' => 'Pak Supri Handoko',
+            'role' => 'driver',
+        ]);
+        $updateResp->assertStatus(200);
+        $this->assertDatabaseHas('users', [
+            'id' => $driver->id,
+            'name' => 'Pak Supri Handoko',
+        ]);
+
+        // 3. Admin cannot delete alfaprima
+        $deleteAdminResp = $this->actingAs($admin)->deleteJson('/api/users/' . $admin->id);
+        $deleteAdminResp->assertStatus(400);
+
+        // 4. Admin deletes the driver user
+        $deleteResp = $this->actingAs($admin)->deleteJson('/api/users/' . $driver->id);
+        $deleteResp->assertStatus(200);
+        $this->assertDatabaseMissing('users', [
+            'id' => $driver->id,
+        ]);
+    }
+
+    public function test_driver_role_can_login_and_load_data_but_forbidden_from_modifications(): void
+    {
+        $driver = User::create([
+            'username' => 'driver_andi',
+            'name' => 'Andi Pratama',
+            'email' => 'driver_andi@alfarent.local',
+            'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+            'role' => 'driver',
+            'active' => true,
+        ]);
+
+        // 1. Driver can log in
+        $loginResp = $this->postJson('/api/login', [
+            'username' => 'driver_andi',
+            'password' => 'password123',
+        ]);
+        $loginResp->assertStatus(200);
+        $loginResp->assertJson([
+            'success' => true,
+            'user' => [
+                'username' => 'driver_andi',
+                'role' => 'driver',
+            ]
+        ]);
+
+        // 2. Driver can load dashboard data
+        $loadResp = $this->actingAs($driver)->getJson('/api/load-data');
+        $loadResp->assertStatus(200);
+        $loadResp->assertJson([
+            'success' => true,
+            'user' => [
+                'role' => 'driver',
+            ]
+        ]);
+
+        // 3. Driver is forbidden from modifying master data / transactions / settings
+        $bookingResp = $this->actingAs($driver)->postJson('/api/bookings', [
+            'customer_id' => 'PLG-0001',
+            'car_id' => 'ARM-0001',
+            'start' => '2026-12-01',
+            'end' => '2026-12-02',
+        ]);
+        $bookingResp->assertStatus(403);
+        $this->assertStringContainsString('driver', strtolower($bookingResp->json('message')));
+
+        $customerResp = $this->actingAs($driver)->postJson('/api/customers', [
+            'nama' => 'Test Customer',
+        ]);
+        $customerResp->assertStatus(403);
+
+        $usersResp = $this->actingAs($driver)->getJson('/api/users');
+        $usersResp->assertStatus(403);
+
+        $clearResp = $this->actingAs($driver)->postJson('/api/clear-all');
+        $clearResp->assertStatus(403);
+    }
+}

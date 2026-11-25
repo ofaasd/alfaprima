@@ -15,7 +15,9 @@ Route::post('/api/logout', [RentalController::class, 'logout']);
 // User Management (Admin)
 Route::get('/api/users', [RentalController::class, 'listUsers']);
 Route::post('/api/users', [RentalController::class, 'createUser']);
+Route::put('/api/users/{id}', [RentalController::class, 'updateUser']);
 Route::post('/api/users/{id}/toggle', [RentalController::class, 'toggleUser']);
+Route::delete('/api/users/{id}', [RentalController::class, 'deleteUser']);
 
 // Master Data CRUD
 Route::post('/api/customers', [RentalController::class, 'saveCustomer']);

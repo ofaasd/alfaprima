@@ -1231,6 +1231,15 @@ main{padding-left:178px!important;padding-right:14px!important}
 #mitra .partner-top-fleet-profit .partner-league-days small{font-size:9px}
 @media(max-width:650px){#mitra #partnerForm .partner-form-actions{grid-template-columns:1fr 1fr;width:100%}#mitra #partnerForm .partner-save-button,#mitra #partnerForm .partner-list-button{min-height:32px}#mitra .partner-top-fleet-profit .partner-league-list{grid-template-columns:1fr}}
 
+
+/* Badge Peran Pengguna & Manajemen User */
+.badge-admin{display:inline-flex;align-items:center;background:#d8b45a;color:#121d30;font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px;letter-spacing:.2px}
+.badge-karyawan{display:inline-flex;align-items:center;background:#2563eb;color:#fff;font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px;letter-spacing:.2px}
+.badge-driver{display:inline-flex;align-items:center;background:#059669;color:#fff;font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px;letter-spacing:.2px}
+.badge-danger{display:inline-flex;align-items:center;background:#dc2626;color:#fff;font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px;letter-spacing:.2px}
+.user-actions{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
+.user-actions .btn.small{padding:3px 7px;font-size:10px;min-height:22px;line-height:1.2}
+
 </style></head>
 <body class="auth-required">
 <div id="authScreen" style="position:fixed;inset:0;z-index:1000;background:#0b1220;display:flex;align-items:center;justify-content:center;padding:18px">
@@ -1251,7 +1260,7 @@ main{padding-left:178px!important;padding-right:14px!important}
     </div>
   </div>
 </div>
-<header><div class="header-brand-wrap"><img src="/icons/alfa_prima_logo.png" alt="Logo Alfa Prima Rent Car" class="header-logo"><div><div class="brand">ALFA <span>PRIMA</span> RENT CAR</div><div class="sub">Sistem Informasi Rental Mobil • Database MySQL • HP &amp; Komputer</div></div></div><div style="display:flex;align-items:center;gap:10px"><div class="sub" id="syncStatus">Menghubungkan ke database MySQL…</div><button class="btn primary no-print" id="installPwaBtn" style="display:none;padding:7px 12px" title="Pasang ke Layar Utama HP">📲 Pasang Aplikasi</button><button class="btn no-print" id="logoutBtn" style="padding:7px 10px">Keluar</button></div></header>
+<header><div class="header-brand-wrap"><img src="/icons/alfa_prima_logo.png" alt="Logo Alfa Prima Rent Car" class="header-logo"><div><div class="brand">ALFA <span>PRIMA</span> RENT CAR</div><div class="sub">Sistem Informasi Rental Mobil • Database MySQL • HP &amp; Komputer</div></div></div><div style="display:flex;align-items:center;gap:10px"><div id="headerUserInfo" style="display:none;align-items:center;gap:8px;padding:3px 10px;background:rgba(255,255,255,0.06);border-radius:8px;border:1px solid var(--line)"><span id="headerUserName" style="font-weight:700;font-size:11.5px;color:var(--text)"></span><span id="headerUserRoleBadge"></span></div><div class="sub" id="syncStatus">Menghubungkan ke database MySQL…</div><button class="btn primary no-print" id="installPwaBtn" style="display:none;padding:7px 12px" title="Pasang ke Layar Utama HP">📲 Pasang Aplikasi</button><button class="btn no-print" id="logoutBtn" style="padding:7px 10px">Keluar</button></div></header>
 <main>
 <aside id="rightToolbar" class="no-print" aria-label="Navigasi utama">
   <button class="toolbar-card active" data-tab="dashboard" title="Home"><span class="toolbar-icon">⌂</span><span>Home</span></button>
@@ -1261,11 +1270,11 @@ main{padding-left:178px!important;padding-right:14px!important}
     <button data-tab="pelanggan">Pelanggan</button><button data-tab="mitra">Mitra</button>
     <button data-tab="armada">Armada</button><button data-tab="driver">Driver</button>
     <button data-tab="pembayaran">Pembayaran</button><button data-tab="pengeluaran">Pengeluaran</button>
-    <button data-tab="pengguna" id="toolbarUsersNav" class="hidden">Pengguna</button>
   </div>
   <button class="toolbar-card" data-tab="daftarBooking" onclick="openDashboardMenu('daftarBooking')"><span class="toolbar-icon">▤</span><span>Rekap</span></button>
   <button class="toolbar-card" data-tab="laporan" onclick="openDashboardMenu('laporan')"><span class="toolbar-icon">▥</span><span>Laporan</span></button>
   <button class="toolbar-card" data-tab="changelog" onclick="openDashboardMenu('changelog')"><span class="toolbar-icon">◷</span><span>Riwayat Perubahan</span></button>
+  <button class="toolbar-card hidden" data-tab="pengguna" id="toolbarUsersNav" onclick="openDashboardMenu('pengguna')" title="Manajemen Pengguna"><span class="toolbar-icon">👥</span><span>User</span></button>
 </aside>
 <section id="dashboard">
 
@@ -1563,16 +1572,85 @@ main{padding-left:178px!important;padding-right:14px!important}
 <div class="card" style="margin-top:14px"><h3>Laba Rugi Cash Basis per Kendaraan</h3><div class="tablewrap"><table><thead><tr><th>Kendaraan</th><th>Kepemilikan</th><th>Penerimaan Kas</th><th>Bagian Mitra</th><th>Biaya Langsung</th><th>Hasil</th></tr></thead><tbody id="carProfitRows"></tbody></table></div><p id="overallProfit" style="color:var(--gold);font-weight:bold"></p></div>
 </section>
 <section id="pengguna" class="hidden">
-<h2>Manajemen Pengguna</h2>
-<div class="card no-print">
-  <h3>Tambah Akun Karyawan</h3>
-  <form id="userForm"><div class="formgrid">
-    <div class="field"><label>Username Karyawan</label><input id="uName" required minlength="4" autocomplete="off"></div>
-    <div class="field"><label>Password (minimal 10 karakter)</label><input id="uPass" type="password" required minlength="10" autocomplete="new-password"></div>
-  </div><div class="row" style="margin-top:12px"><button class="btn primary" type="submit">Buat Akun Karyawan</button></div></form>
-  <div class="notice">Admin memiliki akses penuh. Karyawan dapat memasukkan dan mengubah transaksi, tetapi tidak dapat menghapus data atau membuat akun.</div>
+<div class="toolbar" style="align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+  <div>
+    <h2 style="margin:0">Manajemen Pengguna &amp; Hak Akses</h2>
+    <p class="muted" style="margin:4px 0 0">Kelola akun pengguna, peran hak akses (Admin, Karyawan, Driver), dan kata sandi aplikasi.</p>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span class="badge-admin">👑 Admin</span>
+    <span class="badge-karyawan">👤 Karyawan</span>
+    <span class="badge-driver">🚗 Driver</span>
+  </div>
 </div>
-<div class="card" style="margin-top:14px"><h3>Daftar Akun</h3><div class="tablewrap"><table><thead><tr><th>Username</th><th>Peran</th><th>Status</th><th class="no-print">Aksi</th></tr></thead><tbody id="userRows"></tbody></table></div></div>
+
+<div class="card no-print" style="margin-top:14px">
+  <div class="toolbar" style="margin-bottom:12px;align-items:center;justify-content:space-between">
+    <h3 id="userFormTitle" style="margin:0;color:var(--gold)">Tambah Pengguna Baru</h3>
+    <button type="button" class="btn small hidden" id="userCancelEditBtn" onclick="resetUserForm()">Batal Edit</button>
+  </div>
+  <form id="userForm">
+    <input type="hidden" id="uEditId" value="">
+    <div class="formgrid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
+      <div class="field">
+        <label>Username</label>
+        <input id="uName" required minlength="3" autocomplete="off" placeholder="contoh: driver1">
+      </div>
+      <div class="field">
+        <label>Nama Lengkap / Keterangan</label>
+        <input id="uFullName" placeholder="contoh: Budi Santoso (Driver)">
+      </div>
+      <div class="field">
+        <label>Peran / Role</label>
+        <select id="uRole" required>
+          <option value="driver">🚗 Driver (Hanya Akses Dashboard)</option>
+          <option value="karyawan">👤 Karyawan (Akses Operasional &amp; Transaksi)</option>
+          <option value="admin">👑 Admin (Akses Penuh Seluruh Sistem)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label id="uPassLabel">Password (minimal 6 karakter)</label>
+        <input id="uPass" type="password" required minlength="6" autocomplete="new-password" placeholder="Masukkan password">
+      </div>
+    </div>
+    <div class="row" style="margin-top:14px;display:flex;gap:10px">
+      <button class="btn primary" type="submit" id="userSubmitBtn">Simpan Pengguna</button>
+      <button class="btn" type="button" onclick="resetUserForm()">Reset</button>
+    </div>
+  </form>
+  <div class="notice" style="margin-top:14px">
+    <strong>Panduan Hak Akses Pengguna:</strong>
+    <ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">
+      <li><strong>Admin:</strong> Memiliki akses penuh ke seluruh fitur, laporan keuangan, pengaturan tanda tangan, dan manajemen akun pengguna. User default <code>alfaprima</code> bertindak sebagai Admin utama.</li>
+      <li><strong>Karyawan:</strong> Dapat memasukkan dan mengubah data operasional harian (booking, armada, pelanggan, pembayaran, pengeluaran), namun tidak dapat mengakses menu manajemen pengguna atau menghapus master data.</li>
+      <li><strong>Driver:</strong> Khusus operasional lapangan, hanya dapat login dan melihat halaman <strong>Dashboard (Home)</strong> serta jadwal armada kirim &amp; pulang. Seluruh menu lainnya dikunci.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <div class="toolbar" style="margin-bottom:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+    <h3 style="margin:0">Daftar Akun Pengguna</h3>
+    <button class="btn small" type="button" onclick="renderUsers()">🔄 Muat Ulang</button>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:45px;text-align:center">No.</th>
+          <th>Username</th>
+          <th>Nama Lengkap</th>
+          <th>Peran (Role)</th>
+          <th>Status</th>
+          <th>Dibuat</th>
+          <th class="no-print" style="width:190px;text-align:center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="userRows"></tbody>
+    </table>
+  </div>
+</div>
+
 <div class="card no-print" style="margin-top:14px">
   <h3>Pengaturan Tanda Tangan &amp; QR Code Dokumen</h3>
   <form id="signatureSettingForm" onsubmit="saveSignatureSettings(event)">
@@ -1780,6 +1858,10 @@ function toggleToolbarEditMenu(force){
   if(trigger)trigger.setAttribute('aria-expanded',show?'true':'false');
 }
 function openBookingForTimelineCar(carId){
+  if(currentUser?.role === 'driver' || currentUser?.role === 'drive'){
+    alert('Akses dibatasi. Akun driver tidak memiliki izin menambah booking.');
+    return;
+  }
   const selectedCar=db.cars.find(c=>String(c.id)===String(carId));
   if(!selectedCar){alert('Data armada tidak ditemukan.');return;}
   openDashboardMenu('booking');
@@ -1812,7 +1894,12 @@ document.addEventListener('keydown',e=>{
 });
 
 function openDashboardMenu(tabId){
-  const editTabs=['booking','pelanggan','mitra','armada','driver','pembayaran','pengeluaran','pengguna'];
+  const isDriver = currentUser?.role === 'driver' || currentUser?.role === 'drive';
+  if(isDriver && tabId !== 'dashboard'){
+    alert('Akses dibatasi. Akun driver hanya memiliki hak akses untuk halaman Dashboard.');
+    tabId = 'dashboard';
+  }
+  const editTabs=['booking','pelanggan','mitra','armada','driver','pembayaran','pengeluaran'];
   document.querySelectorAll('#rightToolbar > button').forEach(x=>{
     const isActive = x.dataset.tab === tabId || (x.dataset.tab === 'editMenu' && editTabs.includes(tabId));
     x.classList.toggle('active', !!isActive);
@@ -1822,6 +1909,7 @@ function openDashboardMenu(tabId){
   if(target)target.classList.remove('hidden');
   $('customerQuickActions')?.classList.add('hidden');
   if(tabId==='changelog')renderChangelog();
+  if(tabId==='pengguna' && currentUser?.role==='admin')renderUsers();
   render();
 }
 function toggleCustomerQuickActions(){
@@ -1829,6 +1917,10 @@ function toggleCustomerQuickActions(){
   if(panel)panel.classList.toggle('hidden');
 }
 function openCustomerMenu(mode){
+  if(currentUser?.role === 'driver' || currentUser?.role === 'drive'){
+    alert('Akses dibatasi. Akun driver tidak memiliki izin mengakses data pelanggan.');
+    return;
+  }
   openDashboardMenu('pelanggan');
   $('pelanggan').classList.remove('hidden');
   if(mode==='add'){
@@ -2032,6 +2124,8 @@ function showTimelineBookingCustomer(bookingId, infoType){
  waEl.style.textDecoration=waLink?'underline':'none';
  $('fleetInfoBookingDates').textContent=formatDateDMY(String(booking.start||'').slice(0,10))+' – '+formatDateDMY(String(booking.end||'').slice(0,10));
  $('fleetInfoOpenBooking').onclick=()=>editBooking(bookingId);
+ const isDriver = currentUser?.role === 'driver' || currentUser?.role === 'drive';
+ $('fleetInfoOpenBooking').classList.toggle('hidden', isDriver);
  panel.querySelector('.fleet-customer-placeholder')?.classList.add('hidden');
  details.classList.remove('hidden');
 }
@@ -3915,10 +4009,44 @@ function applyLoadedData(dbData, user){
   document.body.classList.remove('auth-required');
   if ($('authScreen')) $('authScreen').style.display = 'none';
 
-  if ($('usersNav')) $('usersNav').classList.toggle('hidden', currentUser?.role !== 'admin');
-  if ($('toolbarUsersNav')) $('toolbarUsersNav').classList.toggle('hidden', currentUser?.role !== 'admin');
-  if ($('nikField')) $('nikField').classList.toggle('hidden', currentUser?.role !== 'admin');
-  if ($('simField')) $('simField').classList.toggle('hidden', currentUser?.role !== 'admin');
+  const isAdmin = currentUser?.role === 'admin';
+  const isDriver = currentUser?.role === 'driver' || currentUser?.role === 'drive';
+
+  // Update header user info & role badge
+  const headerUserInfo = $('headerUserInfo');
+  if(headerUserInfo && currentUser){
+    headerUserInfo.style.display = 'flex';
+    if($('headerUserName')) $('headerUserName').textContent = currentUser.name || currentUser.username;
+    if($('headerUserRoleBadge')) {
+      if(isAdmin) $('headerUserRoleBadge').innerHTML = '<span class="badge-admin">Admin</span>';
+      else if(isDriver) $('headerUserRoleBadge').innerHTML = '<span class="badge-driver">Driver</span>';
+      else $('headerUserRoleBadge').innerHTML = '<span class="badge-karyawan">Karyawan</span>';
+    }
+  }
+
+  if ($('clearAllBtn')) $('clearAllBtn').classList.toggle('hidden', !isAdmin);
+  if ($('usersNav')) $('usersNav').classList.toggle('hidden', !isAdmin);
+  if ($('toolbarUsersNav')) $('toolbarUsersNav').classList.toggle('hidden', !isAdmin);
+  if ($('nikField')) $('nikField').classList.toggle('hidden', !isAdmin);
+  if ($('simField')) $('simField').classList.toggle('hidden', !isAdmin);
+
+  // Batasi navigasi untuk role Driver (hanya Dashboard)
+  const rightToolbar = $('rightToolbar');
+  if (rightToolbar) {
+    const editMenuBtn = rightToolbar.querySelector('[data-tab="editMenu"]');
+    const rekapBtn = rightToolbar.querySelector('[data-tab="daftarBooking"]');
+    const laporanBtn = rightToolbar.querySelector('[data-tab="laporan"]');
+    const changelogBtn = rightToolbar.querySelector('[data-tab="changelog"]');
+
+    if (editMenuBtn) editMenuBtn.classList.toggle('hidden', isDriver);
+    if (rekapBtn) rekapBtn.classList.toggle('hidden', isDriver);
+    if (laporanBtn) laporanBtn.classList.toggle('hidden', isDriver);
+    if (changelogBtn) changelogBtn.classList.toggle('hidden', isDriver);
+  }
+
+  if (isDriver) {
+    openDashboardMenu('dashboard');
+  }
 
   try {
     if ($('eCar')) $('eCar').innerHTML='<option value="">Biaya umum usaha</option>'+db.cars.map(a=>`<option value="${a.id}">${esc(a.jenis)} (${esc(a.plat)})</option>`).join('');
@@ -4003,35 +4131,130 @@ async function loadAppData(){
   }
 }
 
+let appUsersList = [];
+
+function resetUserForm(){
+  if($('userForm')) $('userForm').reset();
+  if($('uEditId')) $('uEditId').value = '';
+  if($('userFormTitle')) $('userFormTitle').textContent = 'Tambah Pengguna Baru';
+  if($('userSubmitBtn')) $('userSubmitBtn').textContent = 'Simpan Pengguna';
+  if($('userCancelEditBtn')) $('userCancelEditBtn').classList.add('hidden');
+  if($('uPass')) {
+    $('uPass').required = true;
+    $('uPass').placeholder = 'Masukkan password (min. 6 karakter)';
+  }
+  if($('uPassLabel')) $('uPassLabel').textContent = 'Password (minimal 6 karakter)';
+}
+
+function editUser(id){
+  const u = appUsersList.find(x => String(x.id) === String(id));
+  if(!u) return;
+  if($('uEditId')) $('uEditId').value = u.id;
+  if($('uName')) $('uName').value = u.username || '';
+  if($('uFullName')) $('uFullName').value = u.name || '';
+  if($('uRole')) $('uRole').value = u.role || 'karyawan';
+  if($('uPass')) {
+    $('uPass').value = '';
+    $('uPass').required = false;
+    $('uPass').placeholder = 'Kosongkan jika password tidak diubah';
+  }
+  if($('uPassLabel')) $('uPassLabel').textContent = 'Password Baru (kosongkan jika tidak diubah)';
+  if($('userFormTitle')) $('userFormTitle').textContent = 'Edit Pengguna: ' + u.username;
+  if($('userSubmitBtn')) $('userSubmitBtn').textContent = 'Perbarui Pengguna';
+  if($('userCancelEditBtn')) $('userCancelEditBtn').classList.remove('hidden');
+  $('userForm')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  $('uName')?.focus();
+}
+
 async function renderUsers(){
-  if(currentUser?.role!=='admin')return;
+  if(currentUser?.role !== 'admin') return;
   try {
     const users = await apiCall('/api/users');
-    $('userRows').innerHTML=users.map(u=>`<tr><td>${esc(u.username)}</td><td>${esc(u.role)}</td><td>${u.active?'Aktif':'Nonaktif'}</td><td class="no-print">${u.role==='admin'?'':`<button class="btn small ${u.active?'danger':''}" onclick="toggleUser('${u.id}',${!u.active})">${u.active?'Nonaktifkan':'Aktifkan'}</button>`}</td></tr>`).join('')||'<tr><td colspan="4">Belum ada pengguna.</td></tr>';
+    appUsersList = Array.isArray(users) ? users : [];
+    const getRoleBadge = role => {
+      const r = String(role||'').toLowerCase();
+      if(r === 'admin') return '<span class="badge-admin">👑 Admin</span>';
+      if(r === 'driver' || r === 'drive') return '<span class="badge-driver">🚗 Driver</span>';
+      return '<span class="badge-karyawan">👤 Karyawan</span>';
+    };
+    
+    $('userRows').innerHTML = appUsersList.map((u, i) => {
+      const isMaster = String(u.username).toLowerCase() === 'alfaprima';
+      const isSelf = String(u.id) === String(currentUser?.id);
+      const createdDate = u.created_at ? formatDateDMY(String(u.created_at).slice(0,10)) : '-';
+      
+      const toggleBtn = isMaster ? '' : `<button type="button" class="btn small ${u.active ? 'danger' : 'primary'}" onclick="toggleUser('${u.id}', ${!u.active})" title="${u.active ? 'Nonaktifkan akun' : 'Aktifkan akun'}">${u.active ? 'Nonaktifkan' : 'Aktifkan'}</button>`;
+      
+      const editBtn = `<button type="button" class="btn small" onclick="editUser('${u.id}')" title="Edit data pengguna">Edit</button>`;
+      
+      const deleteBtn = (isMaster || isSelf) ? '' : `<button type="button" class="btn small danger" onclick="deleteUserAccount('${u.id}', '${esc(u.username)}')" title="Hapus akun pengguna">Hapus</button>`;
+      
+      return `<tr>
+        <td style="text-align:center">${i + 1}</td>
+        <td><strong>${esc(u.username)}</strong>${isSelf ? ' <small class="muted">(Anda)</small>' : ''}</td>
+        <td>${esc(u.name || '-')}</td>
+        <td>${getRoleBadge(u.role)}</td>
+        <td><span class="${u.active ? 'badge-driver' : 'badge-danger'}" style="font-size:10px;padding:2px 6px">${u.active ? 'Aktif' : 'Nonaktif'}</span></td>
+        <td style="font-size:11px" class="muted">${createdDate}</td>
+        <td class="no-print"><div class="user-actions">${editBtn} ${toggleBtn} ${deleteBtn}</div></td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center">Belum ada data pengguna.</td></tr>';
   } catch (e) {
     console.error('Gagal memuat pengguna:', e);
   }
 }
 
-$('userForm').onsubmit=async e=>{
+$('userForm').onsubmit = async e => {
   e.preventDefault();
-  if(currentUser?.role!=='admin'){alert('Hanya admin yang dapat membuat akun.');return}
-  const username=$('uName').value.trim(),password=$('uPass').value;
+  if(currentUser?.role !== 'admin'){ alert('Hanya admin yang dapat mengelola akun pengguna.'); return; }
+  
+  const editId = $('uEditId')?.value || '';
+  const username = $('uName').value.trim();
+  const name = $('uFullName')?.value.trim() || username;
+  const role = $('uRole')?.value || 'karyawan';
+  const password = $('uPass').value;
+  
+  if(!editId && (!password || password.length < 6)){
+    alert('Password minimal 6 karakter.');
+    $('uPass').focus();
+    return;
+  }
+  
   try {
-    await apiCall('/api/users', 'POST', { username, password });
-    $('userForm').reset();
+    if(editId){
+      const payload = { username, name, role };
+      if(password) payload.password = password;
+      await apiCall('/api/users/' + editId, 'PUT', payload);
+      alert('Data pengguna "' + username + '" berhasil diperbarui.');
+    } else {
+      await apiCall('/api/users', 'POST', { username, name, role, password });
+      alert('Pengguna baru "' + username + '" dengan peran ' + role.toUpperCase() + ' berhasil dibuat.');
+    }
+    resetUserForm();
     await renderUsers();
-    alert('Akun karyawan berhasil dibuat.');
   } catch (err) {
-    alert('Gagal membuat akun: ' + err.message);
+    alert('Gagal menyimpan pengguna: ' + err.message);
   }
 };
 
-async function toggleUser(id,active){
-  if(currentUser?.role!=='admin')return;
-  if(!confirm((active?'Aktifkan':'Nonaktifkan')+' akun karyawan?'))return;
+async function deleteUserAccount(id, username){
+  if(currentUser?.role !== 'admin') return;
+  if(!confirm('Apakah Anda yakin ingin menghapus akun pengguna "' + username + '"?')) return;
   try {
-    await apiCall('/api/users/'+id+'/toggle', 'POST', { active });
+    await apiCall('/api/users/' + id, 'DELETE');
+    if($('uEditId')?.value === String(id)) resetUserForm();
+    await renderUsers();
+    alert('Pengguna "' + username + '" berhasil dihapus.');
+  } catch (e) {
+    alert('Gagal menghapus pengguna: ' + e.message);
+  }
+}
+
+async function toggleUser(id, active){
+  if(currentUser?.role !== 'admin') return;
+  if(!confirm((active ? 'Aktifkan' : 'Nonaktifkan') + ' akun ini?')) return;
+  try {
+    await apiCall('/api/users/' + id + '/toggle', 'POST', { active });
     await renderUsers();
   } catch (e) {
     alert('Gagal mengubah status akun: ' + e.message);
