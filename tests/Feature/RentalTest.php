@@ -328,43 +328,43 @@ class RentalTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_manage_users_and_create_driver(): void
+    public function test_admin_can_manage_users_and_create_crew(): void
     {
         $admin = User::where('username', 'alfaprima')->first();
 
-        // 1. Admin creates a driver user
+        // 1. Admin creates a crew user (even if passed as 'driver', normalizes to 'crew')
         $response = $this->actingAs($admin)->postJson('/api/users', [
-            'username' => 'driver1',
-            'name' => 'Pak Supri (Driver)',
-            'role' => 'driver',
-            'password' => 'driverpass123',
+            'username' => 'crew1',
+            'name' => 'Pak Supri (Crew)',
+            'role' => 'crew',
+            'password' => 'crewpass123',
         ]);
 
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
             'user' => [
-                'username' => 'driver1',
-                'role' => 'driver',
+                'username' => 'crew1',
+                'role' => 'crew',
             ]
         ]);
         $this->assertDatabaseHas('users', [
-            'username' => 'driver1',
-            'role' => 'driver',
+            'username' => 'crew1',
+            'role' => 'crew',
             'active' => 1,
         ]);
 
-        $driver = User::where('username', 'driver1')->first();
+        $crew = User::where('username', 'crew1')->first();
 
         // 2. Admin updates the user
-        $updateResp = $this->actingAs($admin)->putJson('/api/users/' . $driver->id, [
-            'username' => 'driver1',
+        $updateResp = $this->actingAs($admin)->putJson('/api/users/' . $crew->id, [
+            'username' => 'crew1',
             'name' => 'Pak Supri Handoko',
-            'role' => 'driver',
+            'role' => 'crew',
         ]);
         $updateResp->assertStatus(200);
         $this->assertDatabaseHas('users', [
-            'id' => $driver->id,
+            'id' => $crew->id,
             'name' => 'Pak Supri Handoko',
         ]);
 
@@ -372,68 +372,161 @@ class RentalTest extends TestCase
         $deleteAdminResp = $this->actingAs($admin)->deleteJson('/api/users/' . $admin->id);
         $deleteAdminResp->assertStatus(400);
 
-        // 4. Admin deletes the driver user
-        $deleteResp = $this->actingAs($admin)->deleteJson('/api/users/' . $driver->id);
+        // 4. Admin deletes the crew user
+        $deleteResp = $this->actingAs($admin)->deleteJson('/api/users/' . $crew->id);
         $deleteResp->assertStatus(200);
         $this->assertDatabaseMissing('users', [
-            'id' => $driver->id,
+            'id' => $crew->id,
         ]);
     }
 
-    public function test_driver_role_can_login_and_load_data_but_forbidden_from_modifications(): void
+    public function test_crew_role_can_login_and_load_data_but_forbidden_from_unpermitted_pages(): void
     {
-        $driver = User::create([
-            'username' => 'driver_andi',
+        $crew = User::create([
+            'username' => 'crew_andi',
             'name' => 'Andi Pratama',
-            'email' => 'driver_andi@alfarent.local',
+            'email' => 'crew_andi@alfarent.local',
             'password' => \Illuminate\Support\Facades\Hash::make('password123'),
-            'role' => 'driver',
+            'role' => 'crew',
             'active' => true,
         ]);
 
-        // 1. Driver can log in
+        // 1. Crew can log in
         $loginResp = $this->postJson('/api/login', [
-            'username' => 'driver_andi',
+            'username' => 'crew_andi',
             'password' => 'password123',
         ]);
         $loginResp->assertStatus(200);
         $loginResp->assertJson([
             'success' => true,
             'user' => [
-                'username' => 'driver_andi',
-                'role' => 'driver',
+                'username' => 'crew_andi',
+                'role' => 'crew',
             ]
         ]);
 
-        // 2. Driver can load dashboard data
-        $loadResp = $this->actingAs($driver)->getJson('/api/load-data');
+        // 2. Crew can load dashboard data
+        $loadResp = $this->actingAs($crew)->getJson('/api/load-data');
         $loadResp->assertStatus(200);
         $loadResp->assertJson([
             'success' => true,
             'user' => [
-                'role' => 'driver',
+                'role' => 'crew',
             ]
         ]);
 
-        // 3. Driver is forbidden from modifying master data / transactions / settings
-        $bookingResp = $this->actingAs($driver)->postJson('/api/bookings', [
+        // 3. Crew is forbidden from unpermitted pages by default (e.g. booking, customers, users, clear-all)
+        $bookingResp = $this->actingAs($crew)->postJson('/api/bookings', [
             'customer_id' => 'PLG-0001',
             'car_id' => 'ARM-0001',
             'start' => '2026-12-01',
             'end' => '2026-12-02',
         ]);
         $bookingResp->assertStatus(403);
-        $this->assertStringContainsString('driver', strtolower($bookingResp->json('message')));
+        $this->assertStringContainsString('ditolak', strtolower($bookingResp->json('message')));
 
-        $customerResp = $this->actingAs($driver)->postJson('/api/customers', [
+        $customerResp = $this->actingAs($crew)->postJson('/api/customers', [
             'nama' => 'Test Customer',
         ]);
         $customerResp->assertStatus(403);
 
-        $usersResp = $this->actingAs($driver)->getJson('/api/users');
+        $usersResp = $this->actingAs($crew)->getJson('/api/users');
         $usersResp->assertStatus(403);
 
-        $clearResp = $this->actingAs($driver)->postJson('/api/clear-all');
+        $clearResp = $this->actingAs($crew)->postJson('/api/clear-all');
         $clearResp->assertStatus(403);
+    }
+
+    public function test_role_management_custom_roles_and_flexible_page_permissions(): void
+    {
+        $admin = User::where('username', 'alfaprima')->first();
+
+        // 1. Get initial roles configuration
+        $rolesResp = $this->actingAs($admin)->getJson('/api/roles');
+        $rolesResp->assertStatus(200);
+        $rolesResp->assertJsonStructure([
+            'success',
+            'roles' => ['admin', 'karyawan', 'crew'],
+            'available_pages',
+        ]);
+
+        // 2. Update 'crew' role: rename to 'Crew Lapangan' and grant 'booking' permission
+        $updateRoleResp = $this->actingAs($admin)->postJson('/api/roles', [
+            'key' => 'crew',
+            'name' => 'Crew Lapangan',
+            'icon' => '🛠️',
+            'badge_color' => '#059669',
+            'description' => 'Crew bertugas di lapangan dan diizinkan input booking',
+            'permissions' => ['dashboard', 'booking'],
+        ]);
+        $updateRoleResp->assertStatus(200);
+        $this->assertEquals('Crew Lapangan', $updateRoleResp->json('roles.crew.name'));
+        $this->assertContains('booking', $updateRoleResp->json('roles.crew.permissions'));
+
+        // 3. Test that a crew user can now access 'booking' API because it was granted
+        $crew = User::create([
+            'username' => 'crew_budi',
+            'name' => 'Budi Lapangan',
+            'email' => 'crew_budi@alfarent.local',
+            'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+            'role' => 'crew',
+            'active' => true,
+        ]);
+
+        $bookingResp = $this->actingAs($crew)->postJson('/api/bookings', [
+            'customer_id' => 'PLG-0001',
+            'car_id' => 'ARM-0001',
+            'start' => '2026-12-10',
+            'end' => '2026-12-12',
+            'days' => 2,
+            'rate' => 300000,
+            'total' => 600000,
+            'destination' => 'Solo',
+            'units' => [
+                [
+                    'carId' => 'ARM-0001',
+                    'rate' => 300000,
+                    'driverFee' => 0,
+                    'destination' => 'Solo',
+                    'dailySubtotal' => 300000,
+                    'total' => 600000,
+                ]
+            ]
+        ]);
+        $bookingResp->assertStatus(200);
+
+        // But crew is still forbidden from unpermitted pages like 'pelanggan'
+        $custResp = $this->actingAs($crew)->postJson('/api/customers', [
+            'nama' => 'Pelanggan Baru',
+        ]);
+        $custResp->assertStatus(403);
+
+        // 4. Create a custom role 'supervisor'
+        $createRoleResp = $this->actingAs($admin)->postJson('/api/roles', [
+            'key' => 'supervisor',
+            'name' => 'Supervisor Cabang',
+            'icon' => '👔',
+            'badge_color' => '#8b5cf6',
+            'description' => 'Supervisor cabang dengan akses laporan dan dashboard',
+            'permissions' => ['dashboard', 'laporan'],
+        ]);
+        $createRoleResp->assertStatus(200);
+        $this->assertEquals('Supervisor Cabang', $createRoleResp->json('roles.supervisor.name'));
+
+        // 5. Delete custom role 'supervisor'
+        $deleteRoleResp = $this->actingAs($admin)->deleteJson('/api/roles/supervisor');
+        $deleteRoleResp->assertStatus(200);
+        $this->assertArrayNotHasKey('supervisor', $deleteRoleResp->json('roles'));
+
+        // 6. Admin cannot delete system role 'crew' or 'admin'
+        $deleteSystemResp = $this->actingAs($admin)->deleteJson('/api/roles/crew');
+        $deleteSystemResp->assertStatus(400);
+
+        // 7. Non-admin user cannot edit or delete roles
+        $unauthEditResp = $this->actingAs($crew)->postJson('/api/roles', [
+            'key' => 'crew',
+            'name' => 'Hacked Role',
+        ]);
+        $unauthEditResp->assertStatus(403);
     }
 }

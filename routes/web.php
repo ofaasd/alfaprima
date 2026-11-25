@@ -19,6 +19,11 @@ Route::put('/api/users/{id}', [RentalController::class, 'updateUser']);
 Route::post('/api/users/{id}/toggle', [RentalController::class, 'toggleUser']);
 Route::delete('/api/users/{id}', [RentalController::class, 'deleteUser']);
 
+// Roles & Permissions Management (Admin)
+Route::get('/api/roles', [RentalController::class, 'getRoles']);
+Route::post('/api/roles', [RentalController::class, 'saveRole']);
+Route::delete('/api/roles/{key}', [RentalController::class, 'deleteRole']);
+
 // Master Data CRUD
 Route::post('/api/customers', [RentalController::class, 'saveCustomer']);
 Route::delete('/api/customers/{id}', [RentalController::class, 'deleteCustomer']);

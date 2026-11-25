@@ -1232,11 +1232,17 @@ main{padding-left:178px!important;padding-right:14px!important}
 @media(max-width:650px){#mitra #partnerForm .partner-form-actions{grid-template-columns:1fr 1fr;width:100%}#mitra #partnerForm .partner-save-button,#mitra #partnerForm .partner-list-button{min-height:32px}#mitra .partner-top-fleet-profit .partner-league-list{grid-template-columns:1fr}}
 
 
-/* Badge Peran Pengguna & Manajemen User */
+/* Badge Peran Pengguna & Manajemen Roles */
 .badge-admin{display:inline-flex;align-items:center;background:#d8b45a;color:#121d30;font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px;letter-spacing:.2px}
 .badge-karyawan{display:inline-flex;align-items:center;background:#2563eb;color:#fff;font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px;letter-spacing:.2px}
+.badge-crew{display:inline-flex;align-items:center;background:#059669;color:#fff;font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px;letter-spacing:.2px}
 .badge-driver{display:inline-flex;align-items:center;background:#059669;color:#fff;font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px;letter-spacing:.2px}
+.badge-custom-role{display:inline-flex;align-items:center;background:#6366f1;color:#fff;font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px;letter-spacing:.2px}
 .badge-danger{display:inline-flex;align-items:center;background:#dc2626;color:#fff;font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px;letter-spacing:.2px}
+.badge-page{display:inline-flex;align-items:center;background:rgba(255,255,255,0.08);color:var(--text);border:1px solid var(--line);padding:2px 6px;border-radius:5px;font-size:10px;margin:1px 2px}
+.role-page-checkbox-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid var(--line);cursor:pointer;user-select:none;font-size:11.5px}
+.role-page-checkbox-item:hover{background:rgba(255,255,255,0.07)}
+.role-page-checkbox-item input{cursor:pointer;width:16px;height:16px;margin:0}
 .user-actions{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
 .user-actions .btn.small{padding:3px 7px;font-size:10px;min-height:22px;line-height:1.2}
 
@@ -1574,80 +1580,170 @@ main{padding-left:178px!important;padding-right:14px!important}
 <section id="pengguna" class="hidden">
 <div class="toolbar" style="align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
   <div>
-    <h2 style="margin:0">Manajemen Pengguna &amp; Hak Akses</h2>
-    <p class="muted" style="margin:4px 0 0">Kelola akun pengguna, peran hak akses (Admin, Karyawan, Driver), dan kata sandi aplikasi.</p>
+    <h2 style="margin:0">Manajemen Pengguna &amp; Hak Akses Peran</h2>
+    <p class="muted" style="margin:4px 0 0">Kelola akun pengguna, ubah nama peran, dan atur izin akses halaman secara fleksibel.</p>
   </div>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap" id="userRoleBadgesSummary">
     <span class="badge-admin">👑 Admin</span>
     <span class="badge-karyawan">👤 Karyawan</span>
-    <span class="badge-driver">🚗 Driver</span>
+    <span class="badge-crew">🚗 Crew</span>
   </div>
 </div>
 
-<div class="card no-print" style="margin-top:14px">
-  <div class="toolbar" style="margin-bottom:12px;align-items:center;justify-content:space-between">
-    <h3 id="userFormTitle" style="margin:0;color:var(--gold)">Tambah Pengguna Baru</h3>
-    <button type="button" class="btn small hidden" id="userCancelEditBtn" onclick="resetUserForm()">Batal Edit</button>
+<!-- Tab Navigasi Pengguna & Peran -->
+<div class="user-mgmt-tabs" style="display:flex;gap:8px;margin:14px 0;border-bottom:1px solid var(--line);padding-bottom:10px">
+  <button type="button" class="btn primary" id="tabBtnUsers" onclick="switchUserMgmtTab('users')">👤 Akun Pengguna</button>
+  <button type="button" class="btn" id="tabBtnRoles" onclick="switchUserMgmtTab('roles')">🛡️ Manajemen Peran &amp; Hak Akses</button>
+</div>
+
+<!-- PANE 1: AKUN PENGGUNA -->
+<div id="userMgmtUsersPane">
+  <div class="card no-print">
+    <div class="toolbar" style="margin-bottom:12px;align-items:center;justify-content:space-between">
+      <h3 id="userFormTitle" style="margin:0;color:var(--gold)">Tambah Pengguna Baru</h3>
+      <button type="button" class="btn small hidden" id="userCancelEditBtn" onclick="resetUserForm()">Batal Edit</button>
+    </div>
+    <form id="userForm">
+      <input type="hidden" id="uEditId" value="">
+      <div class="formgrid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
+        <div class="field">
+          <label>Username</label>
+          <input id="uName" required minlength="3" autocomplete="off" placeholder="contoh: crew1">
+        </div>
+        <div class="field">
+          <label>Nama Lengkap / Keterangan</label>
+          <input id="uFullName" placeholder="contoh: Budi Santoso (Crew)">
+        </div>
+        <div class="field">
+          <label>Peran / Role</label>
+          <select id="uRole" required>
+            <!-- Diisi otomatis dari appRolesConfig -->
+            <option value="crew">🚗 Crew</option>
+            <option value="karyawan">👤 Karyawan</option>
+            <option value="admin">👑 Admin</option>
+          </select>
+        </div>
+        <div class="field">
+          <label id="uPassLabel">Password (minimal 6 karakter)</label>
+          <input id="uPass" type="password" required minlength="6" autocomplete="new-password" placeholder="Masukkan password">
+        </div>
+      </div>
+      <div class="row" style="margin-top:14px;display:flex;gap:10px">
+        <button class="btn primary" type="submit" id="userSubmitBtn">Simpan Pengguna</button>
+        <button class="btn" type="button" onclick="resetUserForm()">Reset</button>
+      </div>
+    </form>
+    <div class="notice" style="margin-top:14px">
+      <strong>Informasi Pengaturan Hak Akses Peran:</strong>
+      <p style="margin:4px 0 0;font-size:12px">Nama peran (misal: <em>Crew</em>, <em>Karyawan</em>) serta pilihan halaman mana saja yang boleh dibuka dapat diatur sesuka hati di tab <strong>🛡️ Manajemen Peran &amp; Hak Akses</strong>.</p>
+    </div>
   </div>
-  <form id="userForm">
-    <input type="hidden" id="uEditId" value="">
-    <div class="formgrid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px">
-      <div class="field">
-        <label>Username</label>
-        <input id="uName" required minlength="3" autocomplete="off" placeholder="contoh: driver1">
-      </div>
-      <div class="field">
-        <label>Nama Lengkap / Keterangan</label>
-        <input id="uFullName" placeholder="contoh: Budi Santoso (Driver)">
-      </div>
-      <div class="field">
-        <label>Peran / Role</label>
-        <select id="uRole" required>
-          <option value="driver">🚗 Driver (Hanya Akses Dashboard)</option>
-          <option value="karyawan">👤 Karyawan (Akses Operasional &amp; Transaksi)</option>
-          <option value="admin">👑 Admin (Akses Penuh Seluruh Sistem)</option>
-        </select>
-      </div>
-      <div class="field">
-        <label id="uPassLabel">Password (minimal 6 karakter)</label>
-        <input id="uPass" type="password" required minlength="6" autocomplete="new-password" placeholder="Masukkan password">
-      </div>
+
+  <div class="card" style="margin-top:14px">
+    <div class="toolbar" style="margin-bottom:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+      <h3 style="margin:0">Daftar Akun Pengguna</h3>
+      <button class="btn small" type="button" onclick="renderUsers()">🔄 Muat Ulang</button>
     </div>
-    <div class="row" style="margin-top:14px;display:flex;gap:10px">
-      <button class="btn primary" type="submit" id="userSubmitBtn">Simpan Pengguna</button>
-      <button class="btn" type="button" onclick="resetUserForm()">Reset</button>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:45px;text-align:center">No.</th>
+            <th>Username</th>
+            <th>Nama Lengkap</th>
+            <th>Peran (Role)</th>
+            <th>Status</th>
+            <th>Dibuat</th>
+            <th class="no-print" style="width:190px;text-align:center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="userRows"></tbody>
+      </table>
     </div>
-  </form>
-  <div class="notice" style="margin-top:14px">
-    <strong>Panduan Hak Akses Pengguna:</strong>
-    <ul style="margin:6px 0 0;padding-left:18px;line-height:1.6">
-      <li><strong>Admin:</strong> Memiliki akses penuh ke seluruh fitur, laporan keuangan, pengaturan tanda tangan, dan manajemen akun pengguna. User default <code>alfaprima</code> bertindak sebagai Admin utama.</li>
-      <li><strong>Karyawan:</strong> Dapat memasukkan dan mengubah data operasional harian (booking, armada, pelanggan, pembayaran, pengeluaran), namun tidak dapat mengakses menu manajemen pengguna atau menghapus master data.</li>
-      <li><strong>Driver:</strong> Khusus operasional lapangan, hanya dapat login dan melihat halaman <strong>Dashboard (Home)</strong> serta jadwal armada kirim &amp; pulang. Seluruh menu lainnya dikunci.</li>
-    </ul>
   </div>
 </div>
 
-<div class="card" style="margin-top:14px">
-  <div class="toolbar" style="margin-bottom:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
-    <h3 style="margin:0">Daftar Akun Pengguna</h3>
-    <button class="btn small" type="button" onclick="renderUsers()">🔄 Muat Ulang</button>
+<!-- PANE 2: MANAJEMEN PERAN & HAK AKSES -->
+<div id="userMgmtRolesPane" class="hidden">
+  <!-- Form Edit / Tambah Peran -->
+  <div class="card no-print" id="roleEditCard" style="margin-bottom:14px;display:none">
+    <div class="toolbar" style="margin-bottom:12px;align-items:center;justify-content:space-between">
+      <h3 id="roleFormTitle" style="margin:0;color:var(--gold)">Edit Peran &amp; Hak Akses Halaman</h3>
+      <button type="button" class="btn small" onclick="closeRoleEditCard()">Tutup ✕</button>
+    </div>
+    <form id="roleForm" onsubmit="saveRoleForm(event)">
+      <div class="formgrid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
+        <div class="field">
+          <label>Kode / ID Role</label>
+          <input id="rKey" required minlength="2" placeholder="contoh: crew" style="text-transform:lowercase">
+        </div>
+        <div class="field">
+          <label>Nama Tampilan Role</label>
+          <input id="rName" required minlength="2" placeholder="contoh: Crew Lapangan">
+        </div>
+        <div class="field">
+          <label>Ikon / Simbol</label>
+          <input id="rIcon" placeholder="contoh: 🚗, 👤, 👑, 💼" maxlength="4">
+        </div>
+        <div class="field">
+          <label>Warna Badge</label>
+          <input id="rBadgeColor" type="color" value="#059669" style="height:36px;padding:2px 4px;cursor:pointer">
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Keterangan / Deskripsi Peran</label>
+          <input id="rDesc" placeholder="Keterangan singkat peran ini">
+        </div>
+      </div>
+
+      <!-- Checklist Izin Akses Halaman -->
+      <div style="margin-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <label style="font-weight:700;font-size:12px;color:var(--gold)">Centang Halaman yang Diizinkan untuk Diakses Peran Ini:</label>
+          <div style="display:flex;gap:8px">
+            <button type="button" class="btn small" onclick="selectAllRolePages(true)">Pilih Semua</button>
+            <button type="button" class="btn small" onclick="selectAllRolePages(false)">Batal Semua</button>
+          </div>
+        </div>
+        <div id="rolePageCheckboxes" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin:0;background:rgba(0,0,0,0.18);padding:12px;border-radius:8px;border:1px solid var(--line)">
+          <!-- Diisi checkbox dinamis -->
+        </div>
+        <small class="muted" style="display:block;margin-top:6px">* Pengguna dengan peran ini hanya dapat melihat menu dan membuka halaman yang dicentang di atas. Semua menu lain akan otomatis disembunyikan dan dikunci.</small>
+      </div>
+
+      <div class="row" style="margin-top:16px;display:flex;gap:10px">
+        <button class="btn primary" type="submit" id="roleSubmitBtn">Simpan Pengaturan Peran</button>
+        <button class="btn" type="button" onclick="closeRoleEditCard()">Batal</button>
+      </div>
+    </form>
   </div>
-  <div class="tablewrap">
-    <table>
-      <thead>
-        <tr>
-          <th style="width:45px;text-align:center">No.</th>
-          <th>Username</th>
-          <th>Nama Lengkap</th>
-          <th>Peran (Role)</th>
-          <th>Status</th>
-          <th>Dibuat</th>
-          <th class="no-print" style="width:190px;text-align:center">Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="userRows"></tbody>
-    </table>
+
+  <!-- Tabel Daftar Peran -->
+  <div class="card">
+    <div class="toolbar" style="margin-bottom:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <h3 style="margin:0">Daftar Peran (Roles) &amp; Izin Akses</h3>
+        <p class="muted" style="margin:2px 0 0;font-size:11px">Atur nama peran dan hak akses halaman yang boleh dibuka oleh masing-masing pengguna.</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn small primary" type="button" onclick="openNewRoleForm()">＋ Buat Peran Baru</button>
+        <button class="btn small" type="button" onclick="loadRolesData()">🔄 Refresh Peran</button>
+      </div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:140px">Peran (Role)</th>
+            <th style="width:100px">Kode Role</th>
+            <th>Deskripsi</th>
+            <th>Halaman yang Diizinkan</th>
+            <th style="width:90px;text-align:center">Pengguna</th>
+            <th class="no-print" style="width:140px;text-align:center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="roleRows"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
@@ -1858,8 +1954,8 @@ function toggleToolbarEditMenu(force){
   if(trigger)trigger.setAttribute('aria-expanded',show?'true':'false');
 }
 function openBookingForTimelineCar(carId){
-  if(currentUser?.role === 'driver' || currentUser?.role === 'drive'){
-    alert('Akses dibatasi. Akun driver tidak memiliki izin menambah booking.');
+  if(!userHasPageAccess('booking')){
+    alert('Akses dibatasi. Akun Anda tidak memiliki izin menambah booking.');
     return;
   }
   const selectedCar=db.cars.find(c=>String(c.id)===String(carId));
@@ -1894,10 +1990,12 @@ document.addEventListener('keydown',e=>{
 });
 
 function openDashboardMenu(tabId){
-  const isDriver = currentUser?.role === 'driver' || currentUser?.role === 'drive';
-  if(isDriver && tabId !== 'dashboard'){
-    alert('Akses dibatasi. Akun driver hanya memiliki hak akses untuk halaman Dashboard.');
-    tabId = 'dashboard';
+  if(currentUser && !userHasPageAccess(tabId)){
+    const roleKey = (currentUser.role === 'driver' || currentUser.role === 'drive') ? 'crew' : currentUser.role;
+    const roleName = appRolesConfig[roleKey]?.name || roleKey;
+    alert(`Akses dibatasi. Peran "${roleName}" tidak memiliki izin untuk membuka halaman ini.`);
+    const firstAllowed = ['dashboard', 'daftarBooking', 'booking', 'armada'].find(p => userHasPageAccess(p)) || 'dashboard';
+    tabId = firstAllowed;
   }
   const editTabs=['booking','pelanggan','mitra','armada','driver','pembayaran','pengeluaran'];
   document.querySelectorAll('#rightToolbar > button').forEach(x=>{
@@ -1909,7 +2007,10 @@ function openDashboardMenu(tabId){
   if(target)target.classList.remove('hidden');
   $('customerQuickActions')?.classList.add('hidden');
   if(tabId==='changelog')renderChangelog();
-  if(tabId==='pengguna' && currentUser?.role==='admin')renderUsers();
+  if(tabId==='pengguna' && currentUser?.role==='admin'){
+    renderUsers();
+    loadRolesData();
+  }
   render();
 }
 function toggleCustomerQuickActions(){
@@ -1917,8 +2018,8 @@ function toggleCustomerQuickActions(){
   if(panel)panel.classList.toggle('hidden');
 }
 function openCustomerMenu(mode){
-  if(currentUser?.role === 'driver' || currentUser?.role === 'drive'){
-    alert('Akses dibatasi. Akun driver tidak memiliki izin mengakses data pelanggan.');
+  if(!userHasPageAccess('pelanggan')){
+    alert('Akses dibatasi. Akun Anda tidak memiliki izin mengakses data pelanggan.');
     return;
   }
   openDashboardMenu('pelanggan');
@@ -2124,8 +2225,8 @@ function showTimelineBookingCustomer(bookingId, infoType){
  waEl.style.textDecoration=waLink?'underline':'none';
  $('fleetInfoBookingDates').textContent=formatDateDMY(String(booking.start||'').slice(0,10))+' – '+formatDateDMY(String(booking.end||'').slice(0,10));
  $('fleetInfoOpenBooking').onclick=()=>editBooking(bookingId);
- const isDriver = currentUser?.role === 'driver' || currentUser?.role === 'drive';
- $('fleetInfoOpenBooking').classList.toggle('hidden', isDriver);
+ const canEditBooking = userHasPageAccess('booking');
+ $('fleetInfoOpenBooking').classList.toggle('hidden', !canEditBooking);
  panel.querySelector('.fleet-customer-placeholder')?.classList.add('hidden');
  details.classList.remove('hidden');
 }
@@ -3961,6 +4062,8 @@ function bindAuthForm(){
     try {
       setSyncStatus('Memeriksa akun…', '#cbd5e1');
       const res = await apiCall('/api/login', 'POST', { username, password });
+      if (res.roles_config) { window.__latestRolesConfig = res.roles_config; appRolesConfig = res.roles_config; }
+      if (res.available_pages) { window.__latestAvailablePages = res.available_pages; appAvailablePages = res.available_pages; }
       currentUser = res.user;
       document.body.classList.remove('auth-required');
       if ($('authScreen')) $('authScreen').style.display = 'none';
@@ -4009,8 +4112,12 @@ function applyLoadedData(dbData, user){
   document.body.classList.remove('auth-required');
   if ($('authScreen')) $('authScreen').style.display = 'none';
 
+  // Inisialisasi konfigurasi peran jika tersedia dari respons
+  if(window.__latestRolesConfig) appRolesConfig = window.__latestRolesConfig;
+  if(window.__latestAvailablePages) appAvailablePages = window.__latestAvailablePages;
+
   const isAdmin = currentUser?.role === 'admin';
-  const isDriver = currentUser?.role === 'driver' || currentUser?.role === 'drive';
+  const roleKey = (currentUser?.role === 'driver' || currentUser?.role === 'drive') ? 'crew' : currentUser?.role;
 
   // Update header user info & role badge
   const headerUserInfo = $('headerUserInfo');
@@ -4018,9 +4125,12 @@ function applyLoadedData(dbData, user){
     headerUserInfo.style.display = 'flex';
     if($('headerUserName')) $('headerUserName').textContent = currentUser.name || currentUser.username;
     if($('headerUserRoleBadge')) {
-      if(isAdmin) $('headerUserRoleBadge').innerHTML = '<span class="badge-admin">Admin</span>';
-      else if(isDriver) $('headerUserRoleBadge').innerHTML = '<span class="badge-driver">Driver</span>';
-      else $('headerUserRoleBadge').innerHTML = '<span class="badge-karyawan">Karyawan</span>';
+      const roleData = appRolesConfig[roleKey];
+      if(roleData){
+        $('headerUserRoleBadge').innerHTML = `<span style="background:${roleData.badge_color||'#6366f1'};color:${roleData.badge_text||'#fff'};font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px">${roleData.icon||'🏷️'} ${esc(roleData.name)}</span>`;
+      } else {
+        $('headerUserRoleBadge').innerHTML = `<span class="badge-custom-role">${esc(currentUser.role)}</span>`;
+      }
     }
   }
 
@@ -4030,22 +4140,13 @@ function applyLoadedData(dbData, user){
   if ($('nikField')) $('nikField').classList.toggle('hidden', !isAdmin);
   if ($('simField')) $('simField').classList.toggle('hidden', !isAdmin);
 
-  // Batasi navigasi untuk role Driver (hanya Dashboard)
-  const rightToolbar = $('rightToolbar');
-  if (rightToolbar) {
-    const editMenuBtn = rightToolbar.querySelector('[data-tab="editMenu"]');
-    const rekapBtn = rightToolbar.querySelector('[data-tab="daftarBooking"]');
-    const laporanBtn = rightToolbar.querySelector('[data-tab="laporan"]');
-    const changelogBtn = rightToolbar.querySelector('[data-tab="changelog"]');
+  updateToolbarVisibility();
 
-    if (editMenuBtn) editMenuBtn.classList.toggle('hidden', isDriver);
-    if (rekapBtn) rekapBtn.classList.toggle('hidden', isDriver);
-    if (laporanBtn) laporanBtn.classList.toggle('hidden', isDriver);
-    if (changelogBtn) changelogBtn.classList.toggle('hidden', isDriver);
-  }
-
-  if (isDriver) {
-    openDashboardMenu('dashboard');
+  // Jika halaman saat ini tidak diizinkan, alihkan ke halaman yang diizinkan
+  const activeSec = document.querySelector('main section:not(.hidden)')?.id || 'dashboard';
+  if(!userHasPageAccess(activeSec)){
+    const firstAllowed = ['dashboard', 'daftarBooking', 'booking', 'armada'].find(p => userHasPageAccess(p)) || 'dashboard';
+    openDashboardMenu(firstAllowed);
   }
 
   try {
@@ -4116,6 +4217,8 @@ async function loadAppData(){
       setSyncStatus('Database MySQL belum dimigrasi', '#ffb3b3');
       return;
     }
+    if (res.roles_config) { window.__latestRolesConfig = res.roles_config; appRolesConfig = res.roles_config; }
+    if (res.available_pages) { window.__latestAvailablePages = res.available_pages; appAvailablePages = res.available_pages; }
     if (!res.user) {
       currentUser = null;
       document.body.classList.add('auth-required');
@@ -4132,6 +4235,289 @@ async function loadAppData(){
 }
 
 let appUsersList = [];
+let appRolesConfig = {
+  admin: { key: 'admin', name: 'Admin', icon: '👑', badge_color: '#d8b45a', badge_text: '#121d30', permissions: ['all'] },
+  karyawan: { key: 'karyawan', name: 'Karyawan', icon: '👤', badge_color: '#2563eb', badge_text: '#ffffff', permissions: ['dashboard','booking','pelanggan','mitra','armada','driver','pembayaran','pengeluaran','daftarBooking','changelog'] },
+  crew: { key: 'crew', name: 'Crew', icon: '🚗', badge_color: '#059669', badge_text: '#ffffff', permissions: ['dashboard'] }
+};
+let appAvailablePages = [
+  { key: 'dashboard', name: 'Dashboard (Home / Ringkasan / Timeline)', icon: '⌂' },
+  { key: 'booking', name: 'Form Booking (Input & Edit)', icon: '📝' },
+  { key: 'pelanggan', name: 'Data Pelanggan', icon: '👥' },
+  { key: 'mitra', name: 'Database Mitra & Profit Mitra', icon: '🤝' },
+  { key: 'armada', name: 'Master Data Armada Mobil', icon: '🚘' },
+  { key: 'driver', name: 'Master Driver & Uang Jalan Driver', icon: '🪪' },
+  { key: 'pembayaran', name: 'Catat Pembayaran Sewa Mobil', icon: '💵' },
+  { key: 'pengeluaran', name: 'Catat Pengeluaran Operasional', icon: '📉' },
+  { key: 'daftarBooking', name: 'Rekap Daftar Booking', icon: '▤' },
+  { key: 'laporan', name: 'Laporan Keuangan & Operasional', icon: '▥' },
+  { key: 'changelog', name: 'Riwayat Perubahan Aplikasi', icon: '◷' }
+];
+
+function switchUserMgmtTab(tab){
+  const isUsers = tab === 'users';
+  if($('tabBtnUsers')) $('tabBtnUsers').classList.toggle('primary', isUsers);
+  if($('tabBtnRoles')) $('tabBtnRoles').classList.toggle('primary', !isUsers);
+  if($('userMgmtUsersPane')) $('userMgmtUsersPane').classList.toggle('hidden', !isUsers);
+  if($('userMgmtRolesPane')) $('userMgmtRolesPane').classList.toggle('hidden', isUsers);
+  if(!isUsers) loadRolesData();
+}
+
+function userHasPageAccess(pageId){
+  if(!currentUser) return false;
+  const roleKey = String(currentUser.role||'').toLowerCase();
+  if(roleKey === 'admin') return true;
+  if(pageId === 'pengguna') return false; // Khusus Admin
+  
+  const normalizedKey = (roleKey === 'driver' || roleKey === 'drive') ? 'crew' : roleKey;
+  const roleData = appRolesConfig[normalizedKey];
+  if(!roleData) return false;
+  
+  const permissions = roleData.permissions || [];
+  return permissions.includes('all') || permissions.includes(pageId);
+}
+
+function updateToolbarVisibility(){
+  const rightToolbar = $('rightToolbar');
+  if(!rightToolbar || !currentUser) return;
+  
+  const isAdmin = currentUser.role === 'admin';
+  
+  if($('toolbarUsersNav')) $('toolbarUsersNav').classList.toggle('hidden', !isAdmin);
+  if($('clearAllBtn')) $('clearAllBtn').classList.toggle('hidden', !isAdmin);
+  
+  // Home
+  const homeBtn = rightToolbar.querySelector('[data-tab="dashboard"]');
+  if(homeBtn) homeBtn.classList.toggle('hidden', !userHasPageAccess('dashboard'));
+  
+  // Rekap
+  const rekapBtn = rightToolbar.querySelector('[data-tab="daftarBooking"]');
+  if(rekapBtn) rekapBtn.classList.toggle('hidden', !userHasPageAccess('daftarBooking'));
+  
+  // Laporan
+  const laporanBtn = rightToolbar.querySelector('[data-tab="laporan"]');
+  if(laporanBtn) laporanBtn.classList.toggle('hidden', !userHasPageAccess('laporan'));
+  
+  // Changelog
+  const changelogBtn = rightToolbar.querySelector('[data-tab="changelog"]');
+  if(changelogBtn) changelogBtn.classList.toggle('hidden', !userHasPageAccess('changelog'));
+  
+  // Edit Menu Dropdown items
+  const editMenuBtn = rightToolbar.querySelector('[data-tab="editMenu"]');
+  const editMenuDropdown = $('toolbarEditMenu');
+  const editSubPages = ['booking', 'pelanggan', 'mitra', 'armada', 'driver', 'pembayaran', 'pengeluaran'];
+  let anySubAllowed = false;
+  
+  editSubPages.forEach(p => {
+    const btn = editMenuDropdown?.querySelector(`[data-tab="${p}"]`);
+    const allowed = userHasPageAccess(p);
+    if(btn) btn.classList.toggle('hidden', !allowed);
+    if(allowed) anySubAllowed = true;
+  });
+  
+  if(editMenuBtn) editMenuBtn.classList.toggle('hidden', !anySubAllowed);
+}
+
+async function loadRolesData(){
+  try {
+    const res = await apiCall('/api/roles');
+    if(res.roles) appRolesConfig = res.roles;
+    if(res.available_pages) appAvailablePages = res.available_pages;
+    renderRoles();
+    updateRoleBadgesSummary();
+    populateUserRoleSelect();
+  } catch(e) {
+    console.error('Gagal memuat peran:', e);
+  }
+}
+
+function updateRoleBadgesSummary(){
+  const container = $('userRoleBadgesSummary');
+  if(!container) return;
+  const roles = Object.values(appRolesConfig);
+  container.innerHTML = roles.map(r => {
+    return `<span style="background:${r.badge_color||'#6366f1'};color:${r.badge_text||'#fff'};font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px">${r.icon||'🏷️'} ${esc(r.name)}</span>`;
+  }).join(' ');
+}
+
+function populateUserRoleSelect(selectedVal){
+  const select = $('uRole');
+  if(!select) return;
+  const prior = selectedVal || select.value || 'crew';
+  const roles = Object.values(appRolesConfig);
+  select.innerHTML = roles.map(r => {
+    return `<option value="${esc(r.key)}">${r.icon||'🏷️'} ${esc(r.name)}</option>`;
+  }).join('');
+  if(roles.some(r => r.key === prior)){
+    select.value = prior;
+  }
+}
+
+function renderRoles(){
+  const tbody = $('roleRows');
+  if(!tbody) return;
+  const roles = Object.values(appRolesConfig);
+  
+  tbody.innerHTML = roles.map(r => {
+    const isSystem = !!r.is_system;
+    const isMasterAdmin = r.key === 'admin';
+    const usersCount = (appUsersList||[]).filter(u => {
+      const uRole = (u.role === 'driver' || u.role === 'drive') ? 'crew' : u.role;
+      return uRole === r.key;
+    }).length;
+    
+    let permissionsBadges = '';
+    if(isMasterAdmin || (r.permissions||[]).includes('all')){
+      permissionsBadges = '<span class="badge-page" style="background:rgba(216,180,90,0.2);color:var(--gold);font-weight:700">★ Akses Penuh (Seluruh Halaman)</span>';
+    } else {
+      const perms = r.permissions || [];
+      if(!perms.length){
+        permissionsBadges = '<span class="muted" style="font-size:11px">Belum ada izin halaman</span>';
+      } else {
+        permissionsBadges = perms.map(pKey => {
+          const pageInfo = appAvailablePages.find(x => x.key === pKey);
+          return `<span class="badge-page">${pageInfo?.icon||'•'} ${esc(pageInfo?.name ? pageInfo.name.split('(')[0].trim() : pKey)}</span>`;
+        }).join('');
+      }
+    }
+    
+    const editBtn = `<button type="button" class="btn small" onclick="editRole('${r.key}')" title="Ubah nama peran & izin akses">Edit Peran</button>`;
+    const deleteBtn = isSystem ? '' : `<button type="button" class="btn small danger" onclick="deleteRoleItem('${r.key}', '${esc(r.name)}')" title="Hapus peran custom">Hapus</button>`;
+    
+    return `<tr>
+      <td><span style="background:${r.badge_color||'#6366f1'};color:${r.badge_text||'#fff'};font-weight:700;padding:2px 8px;border-radius:6px;font-size:11px">${r.icon||'🏷️'} ${esc(r.name)}</span></td>
+      <td><code>${esc(r.key)}</code></td>
+      <td style="font-size:11.5px" class="muted">${esc(r.description || '-')}</td>
+      <td>${permissionsBadges}</td>
+      <td style="text-align:center"><strong>${usersCount}</strong> user</td>
+      <td class="no-print"><div class="user-actions">${editBtn} ${deleteBtn}</div></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="muted" style="text-align:center">Belum ada data peran.</td></tr>';
+}
+
+function openNewRoleForm(){
+  if($('roleForm')) $('roleForm').reset();
+  if($('rKey')){
+    $('rKey').value = '';
+    $('rKey').readOnly = false;
+  }
+  if($('rName')) $('rName').value = '';
+  if($('rIcon')) $('rIcon').value = '🏷️';
+  if($('rBadgeColor')) $('rBadgeColor').value = '#6366f1';
+  if($('rDesc')) $('rDesc').value = '';
+  if($('roleFormTitle')) $('roleFormTitle').textContent = 'Buat Peran (Role) Baru';
+  if($('roleSubmitBtn')) $('roleSubmitBtn').textContent = 'Simpan Peran Baru';
+  renderRolePageCheckboxes([]);
+  const card = $('roleEditCard');
+  if(card){
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+function editRole(key){
+  const r = appRolesConfig[key];
+  if(!r) return;
+  if($('rKey')){
+    $('rKey').value = r.key;
+    $('rKey').readOnly = !!r.is_system;
+  }
+  if($('rName')) $('rName').value = r.name || '';
+  if($('rIcon')) $('rIcon').value = r.icon || '🏷️';
+  if($('rBadgeColor')) $('rBadgeColor').value = r.badge_color || '#6366f1';
+  if($('rDesc')) $('rDesc').value = r.description || '';
+  if($('roleFormTitle')) $('roleFormTitle').textContent = 'Edit Peran: ' + r.name + ' (' + r.key + ')';
+  if($('roleSubmitBtn')) $('roleSubmitBtn').textContent = 'Simpan Pengaturan Peran';
+  
+  const perms = (r.key === 'admin' || (r.permissions||[]).includes('all')) 
+    ? appAvailablePages.map(x => x.key) 
+    : (r.permissions || []);
+  
+  renderRolePageCheckboxes(perms, r.key === 'admin');
+  
+  const card = $('roleEditCard');
+  if(card){
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  $('rName')?.focus();
+}
+
+function renderRolePageCheckboxes(selectedKeys, isAdminRole = false){
+  const container = $('rolePageCheckboxes');
+  if(!container) return;
+  
+  container.innerHTML = appAvailablePages.map(p => {
+    const isChecked = isAdminRole || selectedKeys.includes(p.key) || selectedKeys.includes('all');
+    const disabledAttr = isAdminRole ? 'disabled' : '';
+    return `<label class="role-page-checkbox-item">
+      <input type="checkbox" name="role_pages" value="${p.key}" ${isChecked ? 'checked' : ''} ${disabledAttr}>
+      <span><strong>${p.icon||'•'} ${esc(p.name)}</strong></span>
+    </label>`;
+  }).join('');
+}
+
+function selectAllRolePages(selectAll){
+  const cbs = document.querySelectorAll('#rolePageCheckboxes input[type="checkbox"]:not(:disabled)');
+  cbs.forEach(cb => { cb.checked = !!selectAll; });
+}
+
+function closeRoleEditCard(){
+  const card = $('roleEditCard');
+  if(card) card.style.display = 'none';
+}
+
+async function saveRoleForm(e){
+  if(e) e.preventDefault();
+  if(currentUser?.role !== 'admin'){ alert('Hanya admin yang dapat mengelola peran.'); return; }
+  
+  const key = $('rKey')?.value.trim().toLowerCase();
+  const name = $('rName')?.value.trim();
+  const icon = $('rIcon')?.value.trim() || '🏷️';
+  const badge_color = $('rBadgeColor')?.value || '#6366f1';
+  const description = $('rDesc')?.value.trim() || '';
+  
+  if(!key || !name){
+    alert('Kode role dan nama role wajib diisi.');
+    return;
+  }
+  
+  const checkedBoxes = document.querySelectorAll('#rolePageCheckboxes input[name="role_pages"]:checked');
+  const permissions = Array.from(checkedBoxes).map(cb => cb.value);
+  
+  if(key !== 'admin' && !permissions.length){
+    if(!confirm('Peran ini belum memiliki centang halaman yang diizinkan. Pengguna dengan peran ini tidak akan bisa membuka menu apapun. Lanjutkan?')) return;
+  }
+  
+  try {
+    const payload = { key, name, icon, badge_color, description, permissions };
+    const res = await apiCall('/api/roles', 'POST', payload);
+    if(res.roles) appRolesConfig = res.roles;
+    alert(res.message || 'Peran berhasil disimpan.');
+    closeRoleEditCard();
+    renderRoles();
+    updateRoleBadgesSummary();
+    populateUserRoleSelect();
+    updateToolbarVisibility();
+  } catch(err){
+    alert('Gagal menyimpan peran: ' + err.message);
+  }
+}
+
+async function deleteRoleItem(key, name){
+  if(currentUser?.role !== 'admin') return;
+  if(!confirm('Apakah Anda yakin ingin menghapus peran "' + name + '" (' + key + ')?')) return;
+  try {
+    const res = await apiCall('/api/roles/' + key, 'DELETE');
+    if(res.roles) appRolesConfig = res.roles;
+    alert(res.message || 'Peran berhasil dihapus.');
+    renderRoles();
+    updateRoleBadgesSummary();
+    populateUserRoleSelect();
+  } catch(err){
+    alert('Gagal menghapus peran: ' + err.message);
+  }
+}
 
 function resetUserForm(){
   if($('userForm')) $('userForm').reset();
@@ -4152,7 +4538,10 @@ function editUser(id){
   if($('uEditId')) $('uEditId').value = u.id;
   if($('uName')) $('uName').value = u.username || '';
   if($('uFullName')) $('uFullName').value = u.name || '';
-  if($('uRole')) $('uRole').value = u.role || 'karyawan';
+  
+  const userRole = (u.role === 'driver' || u.role === 'drive') ? 'crew' : u.role;
+  populateUserRoleSelect(userRole);
+  
   if($('uPass')) {
     $('uPass').value = '';
     $('uPass').required = false;
@@ -4171,11 +4560,14 @@ async function renderUsers(){
   try {
     const users = await apiCall('/api/users');
     appUsersList = Array.isArray(users) ? users : [];
+    
     const getRoleBadge = role => {
-      const r = String(role||'').toLowerCase();
-      if(r === 'admin') return '<span class="badge-admin">👑 Admin</span>';
-      if(r === 'driver' || r === 'drive') return '<span class="badge-driver">🚗 Driver</span>';
-      return '<span class="badge-karyawan">👤 Karyawan</span>';
+      const rKey = (role === 'driver' || role === 'drive') ? 'crew' : String(role||'').toLowerCase();
+      const roleData = appRolesConfig[rKey];
+      if(roleData){
+        return `<span style="background:${roleData.badge_color||'#6366f1'};color:${roleData.badge_text||'#fff'};font-weight:700;padding:2px 8px;border-radius:6px;font-size:10.5px">${roleData.icon||'🏷️'} ${esc(roleData.name)}</span>`;
+      }
+      return `<span class="badge-custom-role">🏷️ ${esc(role)}</span>`;
     };
     
     $('userRows').innerHTML = appUsersList.map((u, i) => {
@@ -4194,11 +4586,13 @@ async function renderUsers(){
         <td><strong>${esc(u.username)}</strong>${isSelf ? ' <small class="muted">(Anda)</small>' : ''}</td>
         <td>${esc(u.name || '-')}</td>
         <td>${getRoleBadge(u.role)}</td>
-        <td><span class="${u.active ? 'badge-driver' : 'badge-danger'}" style="font-size:10px;padding:2px 6px">${u.active ? 'Aktif' : 'Nonaktif'}</span></td>
+        <td><span class="${u.active ? 'badge-crew' : 'badge-danger'}" style="font-size:10px;padding:2px 6px">${u.active ? 'Aktif' : 'Nonaktif'}</span></td>
         <td style="font-size:11px" class="muted">${createdDate}</td>
         <td class="no-print"><div class="user-actions">${editBtn} ${toggleBtn} ${deleteBtn}</div></td>
       </tr>`;
     }).join('') || '<tr><td colspan="7" class="muted" style="text-align:center">Belum ada data pengguna.</td></tr>';
+    
+    renderRoles();
   } catch (e) {
     console.error('Gagal memuat pengguna:', e);
   }
@@ -4211,7 +4605,7 @@ $('userForm').onsubmit = async e => {
   const editId = $('uEditId')?.value || '';
   const username = $('uName').value.trim();
   const name = $('uFullName')?.value.trim() || username;
-  const role = $('uRole')?.value || 'karyawan';
+  const role = $('uRole')?.value || 'crew';
   const password = $('uPass').value;
   
   if(!editId && (!password || password.length < 6)){
@@ -4228,7 +4622,7 @@ $('userForm').onsubmit = async e => {
       alert('Data pengguna "' + username + '" berhasil diperbarui.');
     } else {
       await apiCall('/api/users', 'POST', { username, name, role, password });
-      alert('Pengguna baru "' + username + '" dengan peran ' + role.toUpperCase() + ' berhasil dibuat.');
+      alert('Pengguna baru "' + username + '" dengan peran ' + (appRolesConfig[role]?.name||role).toUpperCase() + ' berhasil dibuat.');
     }
     resetUserForm();
     await renderUsers();

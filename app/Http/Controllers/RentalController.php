@@ -105,15 +105,29 @@ class RentalController extends Controller
             ]);
         }
 
+        $rolesConfig = $this->getRolesConfig();
+        $normalizedRole = $user ? (($user->role === 'driver' || $user->role === 'drive') ? 'crew' : $user->role) : null;
+        $userPermissions = ['dashboard'];
+        if ($user) {
+            if ($user->role === 'admin') {
+                $userPermissions = ['all'];
+            } elseif (isset($rolesConfig[$normalizedRole]['permissions'])) {
+                $userPermissions = $rolesConfig[$normalizedRole]['permissions'];
+            }
+        }
+
         return response()->json([
             'success' => true,
             'user' => $user ? [
                 'id' => $user->id,
                 'username' => $user->username,
                 'name' => $user->name,
-                'role' => $user->role,
+                'role' => $normalizedRole,
                 'active' => (bool)$user->active,
+                'permissions' => $userPermissions,
             ] : null,
+            'roles_config' => $rolesConfig,
+            'available_pages' => self::getAvailablePages(),
             'db' => $this->getDbPayload(),
         ]);
     }
@@ -241,6 +255,12 @@ class RentalController extends Controller
             Auth::login($user);
             $request->session()->regenerate();
 
+            $rolesConfig = $this->getRolesConfig();
+            $normalizedRole = ($user->role === 'driver' || $user->role === 'drive') ? 'crew' : $user->role;
+            $userPermissions = ($user->role === 'admin') 
+                ? ['all'] 
+                : ($rolesConfig[$normalizedRole]['permissions'] ?? ['dashboard']);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Login berhasil!',
@@ -248,9 +268,12 @@ class RentalController extends Controller
                     'id' => $user->id,
                     'username' => $user->username,
                     'name' => $user->name,
-                    'role' => $user->role,
+                    'role' => $normalizedRole,
                     'active' => (bool)$user->active,
+                    'permissions' => $userPermissions,
                 ],
+                'roles_config' => $rolesConfig,
+                'available_pages' => self::getAvailablePages(),
                 'db' => $this->getDbPayload(),
             ]);
         } catch (\Throwable $e) {
@@ -287,18 +310,269 @@ class RentalController extends Controller
     }
 
     /**
-     * Restrict driver role from modifying transactions
+     * Default list of pages / features available for access control
      */
-    protected function forbidDriver(): ?\Illuminate\Http\JsonResponse
+    public static function getAvailablePages(): array
     {
-        $role = Auth::user()?->role;
-        if ($role === 'driver' || $role === 'drive') {
+        return [
+            ['key' => 'dashboard', 'name' => 'Dashboard (Home / Ringkasan / Timeline)', 'icon' => '⌂'],
+            ['key' => 'booking', 'name' => 'Form Booking (Input & Edit Booking)', 'icon' => '📝'],
+            ['key' => 'pelanggan', 'name' => 'Data Pelanggan', 'icon' => '👥'],
+            ['key' => 'mitra', 'name' => 'Database Mitra & Profit Mitra', 'icon' => '🤝'],
+            ['key' => 'armada', 'name' => 'Master Data Armada Mobil', 'icon' => '🚘'],
+            ['key' => 'driver', 'name' => 'Master Driver & Uang Jalan Driver', 'icon' => '🪪'],
+            ['key' => 'pembayaran', 'name' => 'Catat Pembayaran Sewa Mobil', 'icon' => '💵'],
+            ['key' => 'pengeluaran', 'name' => 'Catat Pengeluaran Operasional', 'icon' => '📉'],
+            ['key' => 'daftarBooking', 'name' => 'Rekap Daftar Booking', 'icon' => '▤'],
+            ['key' => 'laporan', 'name' => 'Laporan Keuangan & Operasional', 'icon' => '▥'],
+            ['key' => 'changelog', 'name' => 'Riwayat Perubahan Aplikasi', 'icon' => '◷'],
+        ];
+    }
+
+    /**
+     * Default system roles configuration
+     */
+    public static function defaultRolesConfig(): array
+    {
+        return [
+            'admin' => [
+                'key' => 'admin',
+                'name' => 'Admin',
+                'icon' => '👑',
+                'badge_color' => '#d8b45a',
+                'badge_text' => '#121d30',
+                'description' => 'Akses penuh ke seluruh sistem, laporan finansial, pengaturan, dan manajemen pengguna.',
+                'permissions' => ['all'],
+                'is_system' => true,
+            ],
+            'karyawan' => [
+                'key' => 'karyawan',
+                'name' => 'Karyawan',
+                'icon' => '👤',
+                'badge_color' => '#2563eb',
+                'badge_text' => '#ffffff',
+                'description' => 'Akses operasional dan transaksi harian (booking, armada, pelanggan, pembayaran, pengeluaran).',
+                'permissions' => [
+                    'dashboard',
+                    'booking',
+                    'pelanggan',
+                    'mitra',
+                    'armada',
+                    'driver',
+                    'pembayaran',
+                    'pengeluaran',
+                    'daftarBooking',
+                    'changelog',
+                ],
+                'is_system' => true,
+            ],
+            'crew' => [
+                'key' => 'crew',
+                'name' => 'Crew',
+                'icon' => '🚗',
+                'badge_color' => '#059669',
+                'badge_text' => '#ffffff',
+                'description' => 'Akses operasional lapangan, hanya dapat membuka halaman yang diizinkan (default: Dashboard).',
+                'permissions' => [
+                    'dashboard',
+                ],
+                'is_system' => true,
+            ],
+        ];
+    }
+
+    /**
+     * Get active roles configuration from settings or default
+     */
+    public function getRolesConfig(): array
+    {
+        // One-time auto-migrate any legacy 'driver' or 'drive' role in users table to 'crew'
+        try {
+            if (Schema::hasTable('users')) {
+                User::whereIn('role', ['driver', 'drive'])->update(['role' => 'crew']);
+            }
+        } catch (\Throwable $e) {}
+
+        $defaults = self::defaultRolesConfig();
+        if (!Schema::hasTable('settings')) {
+            return $defaults;
+        }
+
+        $raw = Setting::get('roles_config');
+        if (!$raw) {
+            return $defaults;
+        }
+
+        $saved = json_decode($raw, true);
+        if (!is_array($saved) || empty($saved)) {
+            return $defaults;
+        }
+
+        // Migrate any driver key in saved config to crew
+        if (isset($saved['driver']) && !isset($saved['crew'])) {
+            $saved['crew'] = $saved['driver'];
+            $saved['crew']['key'] = 'crew';
+            $saved['crew']['name'] = 'Crew';
+            unset($saved['driver']);
+        }
+
+        // Merge with defaults to ensure admin, karyawan, and crew always exist
+        foreach ($defaults as $k => $def) {
+            if (!isset($saved[$k])) {
+                $saved[$k] = $def;
+            } else {
+                $saved[$k]['is_system'] = true;
+                $saved[$k]['key'] = $k;
+                if ($k === 'admin') {
+                    $saved[$k]['permissions'] = ['all'];
+                }
+            }
+        }
+
+        return $saved;
+    }
+
+    /**
+     * Check if authenticated user has permission to access a specific page/feature
+     */
+    protected function checkPagePermission(string $page): ?\Illuminate\Http\JsonResponse
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+        }
+
+        if ($user->role === 'admin') {
+            return null; // Admin has full access
+        }
+
+        $userRole = strtolower($user->role);
+        if ($userRole === 'driver' || $userRole === 'drive') {
+            $userRole = 'crew';
+        }
+
+        $roles = $this->getRolesConfig();
+        $roleData = $roles[$userRole] ?? null;
+
+        if (!$roleData) {
             return response()->json([
                 'success' => false,
-                'message' => 'Akses ditolak. Akun role driver hanya memiliki izin untuk melihat Dashboard.',
+                'message' => "Peran '{$userRole}' tidak ditemukan atau belum dikonfigurasi.",
             ], 403);
         }
-        return null;
+
+        $permissions = $roleData['permissions'] ?? [];
+        if (in_array('all', $permissions) || in_array($page, $permissions)) {
+            return null; // Allowed
+        }
+
+        $roleName = $roleData['name'] ?? $userRole;
+        return response()->json([
+            'success' => false,
+            'message' => "Akses ditolak. Peran '{$roleName}' tidak memiliki izin untuk fitur/halaman ini.",
+        ], 403);
+    }
+
+    /**
+     * Get Roles and Permissions API
+     */
+    public function getRoles()
+    {
+        return response()->json([
+            'success' => true,
+            'roles' => $this->getRolesConfig(),
+            'available_pages' => self::getAvailablePages(),
+        ]);
+    }
+
+    /**
+     * Admin: Save or update role (rename role, change permissions, or add custom role)
+     */
+    public function saveRole(Request $request)
+    {
+        if (Auth::user()?->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'key' => 'required|string|min:2|max:30',
+            'name' => 'required|string|min:2|max:50',
+            'permissions' => 'nullable|array',
+            'icon' => 'nullable|string|max:10',
+            'description' => 'nullable|string|max:255',
+            'badge_color' => 'nullable|string|max:20',
+        ]);
+
+        $key = strtolower(trim($request->key));
+        if ($key === 'driver' || $key === 'drive') {
+            $key = 'crew';
+        }
+
+        $roles = $this->getRolesConfig();
+
+        $existing = $roles[$key] ?? [
+            'key' => $key,
+            'is_system' => in_array($key, ['admin', 'karyawan', 'crew']),
+        ];
+
+        $permissions = $request->input('permissions', []);
+        if ($key === 'admin') {
+            $permissions = ['all'];
+        }
+
+        $roles[$key] = [
+            'key' => $key,
+            'name' => trim($request->name),
+            'icon' => $request->input('icon', $existing['icon'] ?? '🏷️'),
+            'badge_color' => $request->input('badge_color', $existing['badge_color'] ?? '#6366f1'),
+            'badge_text' => $request->input('badge_text', $existing['badge_text'] ?? '#ffffff'),
+            'description' => trim($request->input('description', $existing['description'] ?? '')),
+            'permissions' => $permissions,
+            'is_system' => in_array($key, ['admin', 'karyawan', 'crew']),
+        ];
+
+        Setting::set('roles_config', json_encode($roles));
+
+        return response()->json([
+            'success' => true,
+            'message' => "Pengaturan peran '{$roles[$key]['name']}' berhasil disimpan.",
+            'roles' => $roles,
+            'available_pages' => self::getAvailablePages(),
+        ]);
+    }
+
+    /**
+     * Admin: Delete Custom Role
+     */
+    public function deleteRole($key)
+    {
+        if (Auth::user()?->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $key = strtolower(trim($key));
+        if (in_array($key, ['admin', 'karyawan', 'crew', 'driver', 'drive'])) {
+            return response()->json(['message' => 'Peran bawaan sistem tidak dapat dihapus.'], 400);
+        }
+
+        $usersCount = User::where('role', $key)->count();
+        if ($usersCount > 0) {
+            return response()->json([
+                'message' => "Tidak dapat menghapus peran ini karena masih digunakan oleh {$usersCount} pengguna. Ubah peran pengguna terlebih dahulu.",
+            ], 400);
+        }
+
+        $roles = $this->getRolesConfig();
+        if (isset($roles[$key])) {
+            unset($roles[$key]);
+            Setting::set('roles_config', json_encode($roles));
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Peran berhasil dihapus.',
+            'roles' => $roles,
+        ]);
     }
 
     /**
@@ -317,7 +591,7 @@ class RentalController extends Controller
     }
 
     /**
-     * Admin: Create User Account (Admin, Karyawan, Driver)
+     * Admin: Create User Account
      */
     public function createUser(Request $request)
     {
@@ -328,13 +602,13 @@ class RentalController extends Controller
         $request->validate([
             'username' => 'required|string|min:3|max:50|unique:users,username',
             'password' => 'required|string|min:6',
-            'role' => 'nullable|string|in:admin,karyawan,driver,drive',
+            'role' => 'nullable|string|max:50',
             'name' => 'nullable|string|max:100',
         ]);
 
-        $role = strtolower($request->input('role', 'karyawan'));
-        if ($role === 'drive') {
-            $role = 'driver';
+        $role = strtolower(trim($request->input('role', 'karyawan')));
+        if ($role === 'driver' || $role === 'drive') {
+            $role = 'crew';
         }
 
         $user = User::create([
@@ -363,7 +637,7 @@ class RentalController extends Controller
         $request->validate([
             'username' => 'required|string|min:3|max:50|unique:users,username,' . $user->id,
             'password' => 'nullable|string|min:6',
-            'role' => 'nullable|string|in:admin,karyawan,driver,drive',
+            'role' => 'nullable|string|max:50',
             'name' => 'nullable|string|max:100',
             'active' => 'nullable|boolean',
         ]);
@@ -374,8 +648,11 @@ class RentalController extends Controller
             $user->active = true;
         } else {
             if ($request->has('role')) {
-                $role = strtolower($request->role);
-                $user->role = ($role === 'drive') ? 'driver' : $role;
+                $role = strtolower(trim($request->role));
+                if ($role === 'driver' || $role === 'drive') {
+                    $role = 'crew';
+                }
+                $user->role = $role;
             }
             if ($request->has('active')) {
                 $user->active = (bool)$request->active;
@@ -443,7 +720,7 @@ class RentalController extends Controller
      */
     public function saveCustomer(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('pelanggan')) return $forbid;
         $id = $request->id ?: $this->getNextId(Customer::class, 'PLG-');
 
         $customer = Customer::updateOrCreate(
@@ -466,7 +743,7 @@ class RentalController extends Controller
      */
     public function deleteCustomer($id)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('pelanggan')) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus data.'], 403);
         }
@@ -484,7 +761,7 @@ class RentalController extends Controller
      */
     public function saveCar(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('armada')) return $forbid;
         $id = $request->id ?: $this->getNextId(Car::class, 'ARM-');
 
         $car = Car::updateOrCreate(
@@ -510,7 +787,7 @@ class RentalController extends Controller
      */
     public function deleteCar($id)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('armada')) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus data.'], 403);
         }
@@ -528,7 +805,7 @@ class RentalController extends Controller
      */
     public function saveDriver(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('driver')) return $forbid;
         $id = $request->id ?: $this->getNextId(Driver::class, 'DRV-');
 
         $driver = Driver::updateOrCreate(
@@ -550,7 +827,7 @@ class RentalController extends Controller
      */
     public function deleteDriver($id)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('driver')) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus data.'], 403);
         }
@@ -568,7 +845,7 @@ class RentalController extends Controller
      */
     public function savePartner(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('mitra')) return $forbid;
         $id = $request->id ?: $this->getNextId(Partner::class, 'MTR-');
 
         $partner = Partner::updateOrCreate(
@@ -591,7 +868,7 @@ class RentalController extends Controller
      */
     public function saveBooking(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('booking')) return $forbid;
         $editId = $request->id;
         $customerId = $request->customer_id;
         $carId = $request->car_id;
@@ -694,7 +971,7 @@ class RentalController extends Controller
      */
     public function deleteBooking($id)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('booking')) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus data.'], 403);
         }
@@ -713,7 +990,7 @@ class RentalController extends Controller
      */
     public function savePayment(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('pembayaran')) return $forbid;
         $booking = Booking::find($request->booking_id);
         $amount = (float) $request->amount;
 
@@ -752,7 +1029,7 @@ class RentalController extends Controller
      */
     public function updatePayment(Request $request, $id)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('pembayaran')) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat mengubah pembayaran.'], 403);
         }
@@ -790,7 +1067,7 @@ class RentalController extends Controller
      */
     public function saveExpense(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('pengeluaran')) return $forbid;
         $amount = (float) $request->amount;
         if ($amount <= 0) {
             return response()->json(['message' => 'Nominal pengeluaran harus lebih dari 0.'], 422);
@@ -815,7 +1092,7 @@ class RentalController extends Controller
      */
     public function deleteExpense($id)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('pengeluaran')) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus data.'], 403);
         }
@@ -829,7 +1106,7 @@ class RentalController extends Controller
      */
     public function savePartnerPayment(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('mitra')) return $forbid;
         $amount = (float) $request->amount;
         if ($amount <= 0) {
             return response()->json(['message' => 'Nominal harus lebih dari 0.'], 422);
@@ -855,7 +1132,7 @@ class RentalController extends Controller
      */
     public function saveDriverPayment(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('driver')) return $forbid;
         $amount = (float) $request->amount;
         if ($amount <= 0) {
             return response()->json(['message' => 'Nominal harus lebih dari 0.'], 422);
@@ -883,7 +1160,7 @@ class RentalController extends Controller
      */
     public function saveOtherCharge(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('pengeluaran')) return $forbid;
         $amount = (float) $request->amount;
         if ($amount <= 0) {
             return response()->json(['message' => 'Nominal harus lebih dari 0.'], 422);
@@ -908,7 +1185,7 @@ class RentalController extends Controller
      */
     public function saveAccount(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('pengeluaran')) return $forbid;
         $request->validate([
             'code' => 'required|string',
             'name' => 'required|string',
@@ -933,7 +1210,7 @@ class RentalController extends Controller
      */
     public function deletePayment($id)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('pembayaran')) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus pembayaran.'], 403);
         }
@@ -958,7 +1235,7 @@ class RentalController extends Controller
      */
     public function saveAll(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('booking')) return $forbid;
         $data = $request->all();
         if (!is_array($data)) {
             return response()->json(['message' => 'Data tidak valid.'], 422);
@@ -1289,7 +1566,7 @@ class RentalController extends Controller
      */
     public function saveJournal(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('pengeluaran')) return $forbid;
         $amount = (float) $request->amount;
         if ($amount <= 0 || $request->debit_account === $request->credit_account) {
             return response()->json(['message' => 'Nominal harus positif dan akun debit/kredit harus berbeda.'], 422);
@@ -1312,11 +1589,26 @@ class RentalController extends Controller
     }
 
     /**
+     * Fallback helper for driver/crew check
+     */
+    private function forbidDriver()
+    {
+        $role = strtolower(Auth::user()?->role ?? '');
+        if ($role === 'driver' || $role === 'drive' || $role === 'crew') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akses dibatasi. Akun driver/crew hanya memiliki hak akses untuk halaman Dashboard.'
+            ], 403);
+        }
+        return null;
+    }
+
+    /**
      * Backup JSON export
      */
     public function backupJson()
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('laporan')) return $forbid;
         $data = [
             'customers' => Customer::all(),
             'cars' => Car::all(),
@@ -1341,7 +1633,6 @@ class RentalController extends Controller
      */
     public function restoreJson(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat memulihkan data.'], 403);
         }
@@ -1389,7 +1680,7 @@ class RentalController extends Controller
      */
     public function exportCsv(): StreamedResponse
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
+        if ($forbid = $this->checkPagePermission('laporan')) return $forbid;
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="laporan_booking_alfa_prima.csv"',
@@ -1440,7 +1731,6 @@ class RentalController extends Controller
      */
     public function clearAll()
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['message' => 'Hanya admin yang dapat menghapus seluruh data.'], 403);
         }
@@ -1489,7 +1779,6 @@ class RentalController extends Controller
      */
     public function saveSettings(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['success' => false, 'message' => 'Hanya admin yang dapat mengubah pengaturan.'], 403);
         }
@@ -1530,7 +1819,6 @@ class RentalController extends Controller
      */
     public function uploadSignature(Request $request)
     {
-        if ($forbid = $this->forbidDriver()) return $forbid;
         if (Auth::user()?->role !== 'admin') {
             return response()->json(['success' => false, 'message' => 'Hanya admin yang dapat mengunggah tanda tangan.'], 403);
         }
