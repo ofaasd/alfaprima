@@ -2320,6 +2320,7 @@ async function apiCall(url, method = 'GET', body = null) {
   }
   if (!res.ok) {
     const err = new Error(data && data.message ? data.message : `Terjadi kesalahan sistem (HTTP ${res.status}).`);
+    err.status = res.status;
     err.data = data;
     throw err;
   }
@@ -2342,7 +2343,11 @@ async function persistToDatabase() {
   } catch (err) {
     saveInFlight = false;
     setSyncStatus('Gagal menyimpan ke MySQL', '#ffb3b3');
-    alert('Data belum berhasil disimpan ke database MySQL: ' + err.message);
+    if (err.status === 401 || (err.data && err.data.unauthenticated) || String(err.message).toLowerCase().includes('unauthenticated')) {
+      showSessionExpiredModal();
+    } else {
+      alert('Data belum berhasil disimpan ke database MySQL: ' + err.message);
+    }
     saveQueued = false;
   }
 }
@@ -4564,6 +4569,69 @@ function normalizeDb(data){
     }
   };
 }
+
+function showSessionExpiredModal() {
+  const modal = $('sessionExpiredModal');
+  if (!modal) {
+    alert('Sesi login telah berakhir (Unauthenticated). Silakan login kembali.');
+    return;
+  }
+  const userInput = $('sessionExpiredUser');
+  const passInput = $('sessionExpiredPass');
+  const alertEl = $('sessionExpiredAlert');
+  if (alertEl) { alertEl.style.display = 'none'; alertEl.textContent = ''; }
+  if (userInput) userInput.value = currentUser?.username || 'alfaprima';
+  if (passInput) passInput.value = '';
+  modal.style.display = 'flex';
+  modal.classList.remove('hidden');
+  setTimeout(() => passInput?.focus(), 50);
+}
+
+function hideSessionExpiredModal() {
+  const modal = $('sessionExpiredModal');
+  if (modal) {
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
+  }
+}
+
+function bindSessionExpiredForm() {
+  const form = $('sessionExpiredForm');
+  if (!form) return;
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const username = $('sessionExpiredUser')?.value.trim() || '';
+    const password = $('sessionExpiredPass')?.value || '';
+    const alertEl = $('sessionExpiredAlert');
+    const submitBtn = $('sessionExpiredSubmitBtn');
+
+    if (!username || !password) {
+      if (alertEl) { alertEl.style.display = 'block'; alertEl.textContent = 'Silakan masukkan username dan password.'; }
+      return;
+    }
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Memverifikasi…'; }
+    try {
+      setSyncStatus('Memulihkan sesi login…', '#cbd5e1');
+      const res = await apiCall('/api/login', 'POST', { username, password });
+      currentUser = res.user;
+      if (res.roles_config) { window.__latestRolesConfig = res.roles_config; appRolesConfig = res.roles_config; }
+      hideSessionExpiredModal();
+      setSyncStatus('Sesi berhasil dipulihkan! Menyimpan data ke MySQL…', '#64c69a');
+      await persistToDatabase();
+    } catch (err) {
+      setSyncStatus('Gagal memulihkan sesi', '#ffb3b3');
+      if (alertEl) {
+        alertEl.style.display = 'block';
+        alertEl.textContent = err.message || 'Login gagal. Periksa kembali password Anda.';
+      } else {
+        alert(err.message || 'Login gagal.');
+      }
+    } finally {
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Login & Lanjutkan Simpan Data'; }
+    }
+  };
+}
+
 function bindAuthForm(){
   const form = $('authForm');
   if (!form) return;
@@ -5296,6 +5364,7 @@ if ($('logoutBtn')) {
 
 async function startApp() {
   bindAuthForm();
+  bindSessionExpiredForm();
   try {
     await loadAppData();
   } catch (err) {
@@ -5304,6 +5373,15 @@ async function startApp() {
   }
 }
 startApp();
+
+// Session keepalive heartbeat setiap 10 menit agar sesi login tetap aktif
+setInterval(async () => {
+  if (currentUser) {
+    try {
+      await fetch('/api/signature-url', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } });
+    } catch (_) {}
+  }
+}, 10 * 60 * 1000);
 
 // Progressive Web App (PWA) Support
 let deferredPrompt = null;
@@ -5377,6 +5455,34 @@ if ('serviceWorker' in navigator) {
       </table>
     </div>
     <div id="partnerFleetCount" class="muted" style="font-size:11px;margin-top:8px"></div>
+  </div>
+</div>
+
+
+<!-- Modal Re-Login saat Sesi Berakhir (Mencegah kehilangan data formulir) -->
+<div id="sessionExpiredModal" class="hidden" style="position:fixed;inset:0;z-index:9999;background:rgba(2,8,18,0.88);display:none;align-items:center;justify-content:center;padding:18px">
+  <div class="card" style="width:min(440px,96vw);padding:24px;border:1px solid var(--gold,#d8b45a);box-shadow:0 20px 60px rgba(0,0,0,0.7);border-radius:12px;background:var(--panel,#131f32)">
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:32px;margin-bottom:6px">🔒</div>
+      <h3 style="margin:0 0 6px;color:var(--gold,#d8b45a);font-size:16px">Sesi Login Telah Berakhir</h3>
+      <p style="font-size:12px;color:var(--muted,#94a3b8);margin:0;line-height:1.4">
+        Data booking atau formulir yang baru Anda masukkan <strong style="color:#64c69a">tersimpan aman di memori</strong> dan tidak akan hilang. Silakan masukkan password akun Anda untuk melanjutkan penyimpanan ke database MySQL:
+      </p>
+    </div>
+    <div id="sessionExpiredAlert" style="display:none;margin-bottom:12px;padding:8px 10px;border-radius:6px;background:#fef2f2;color:#991b1b;font-size:11px;line-height:1.4"></div>
+    <form id="sessionExpiredForm">
+      <div class="field" style="margin-bottom:10px">
+        <label style="font-size:11px">Username</label>
+        <input id="sessionExpiredUser" required style="width:100%;height:34px;padding:6px 9px;font-size:12px" placeholder="Username">
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label style="font-size:11px">Password</label>
+        <input id="sessionExpiredPass" type="password" required autocomplete="current-password" style="width:100%;height:34px;padding:6px 9px;font-size:12px" placeholder="Masukkan password">
+      </div>
+      <div class="row" style="gap:8px;justify-content:flex-end">
+        <button type="submit" id="sessionExpiredSubmitBtn" class="btn primary" style="width:100%;min-height:36px;font-weight:600">Login &amp; Lanjutkan Simpan Data</button>
+      </div>
+    </form>
   </div>
 </div>
 

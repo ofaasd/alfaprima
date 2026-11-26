@@ -529,4 +529,49 @@ class RentalTest extends TestCase
         ]);
         $unauthEditResp->assertStatus(403);
     }
+
+    public function test_save_all_unauthenticated_returns_401_and_authenticated_succeeds(): void
+    {
+        // 1. Without login, /api/save-all must return 401 with clear message
+        $unauthResp = $this->postJson('/api/save-all', [
+            'bookings' => []
+        ]);
+        $unauthResp->assertStatus(401);
+        $unauthResp->assertJson([
+            'success' => false,
+            'unauthenticated' => true,
+        ]);
+        $this->assertStringContainsString('Unauthenticated', $unauthResp->json('message'));
+
+        // 2. Login via /api/login sets remember cookie and allows saveAll
+        $loginResp = $this->postJson('/api/login', [
+            'username' => 'alfaprima',
+            'password' => 'password123',
+        ]);
+        $loginResp->assertStatus(200);
+
+        $admin = User::where('username', 'alfaprima')->first();
+        $saveResp = $this->actingAs($admin)->postJson('/api/save-all', [
+            'customers' => [],
+            'cars' => [],
+            'bookings' => [
+                [
+                    'id' => 'BKG-0001',
+                    'customerId' => 'PLG-0001',
+                    'carId' => 'ARM-0001',
+                    'start' => '2026-12-01',
+                    'end' => '2026-12-03',
+                    'days' => 3,
+                    'rate' => 350000,
+                    'total' => 1050000,
+                    'status' => 'Aktif',
+                ]
+            ],
+            'payments' => [],
+            'expenses' => [],
+            'partners' => [],
+        ]);
+        $saveResp->assertStatus(200);
+        $saveResp->assertJson(['success' => true]);
+    }
 }

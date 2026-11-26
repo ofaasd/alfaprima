@@ -252,7 +252,7 @@ class RentalController extends Controller
                 ], 403);
             }
 
-            Auth::login($user);
+            Auth::login($user, true);
             $request->session()->regenerate();
 
             $rolesConfig = $this->getRolesConfig();
@@ -439,7 +439,11 @@ class RentalController extends Controller
     {
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Unauthenticated'], 401);
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi login telah berakhir (Unauthenticated). Silakan login kembali.',
+                'unauthenticated' => true,
+            ], 401);
         }
 
         if ($user->role === 'admin') {
@@ -1235,7 +1239,30 @@ class RentalController extends Controller
      */
     public function saveAll(Request $request)
     {
-        if ($forbid = $this->checkPagePermission('booking')) return $forbid;
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Sesi login telah berakhir (Unauthenticated). Silakan login kembali.',
+                'unauthenticated' => true,
+            ], 401);
+        }
+
+        if ($user->role !== 'admin') {
+            $userRole = strtolower($user->role);
+            if ($userRole === 'driver' || $userRole === 'drive') {
+                $userRole = 'crew';
+            }
+            $roles = $this->getRolesConfig();
+            $permissions = $roles[$userRole]['permissions'] ?? [];
+            if (!in_array('all', $permissions) && !in_array('booking', $permissions) && !in_array('dashboard', $permissions)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akses ditolak. Anda tidak memiliki izin untuk menyimpan data.',
+                ], 403);
+            }
+        }
+
         $data = $request->all();
         if (!is_array($data)) {
             return response()->json(['message' => 'Data tidak valid.'], 422);
