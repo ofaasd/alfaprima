@@ -715,7 +715,7 @@ nav .nav-dropdown-menu button.active{background:var(--gold);border-color:var(--g
 #dashboard .fleet-timeline-table .timeline-day{min-width:19px;font-size:9px;color:var(--muted)}
 #dashboard .timeline-track-cell{padding:6px 4px!important}
 #dashboard .fleet-timeline-track{height:24px;position:relative;background:var(--panel2);border-radius:5px;min-width:100%}
-#dashboard .fleet-timeline-bar{position:absolute;top:3px;height:18px;border-radius:4px;background:var(--gold);color:#171717;font-size:9px;font-weight:700;line-height:18px;overflow:hidden;padding:0 3px;box-sizing:border-box;white-space:nowrap;text-align:left}
+#dashboard .fleet-timeline-bar{position:absolute;top:3px;height:18px;border-radius:4px;background:var(--gold);color:#171717;font-size:9px;font-weight:700;line-height:18px;overflow:hidden;text-overflow:ellipsis;padding:0 3px;box-sizing:border-box;white-space:nowrap;text-align:left}
 #dashboard .timeline-car-col strong{font-size:9px;font-weight:400}#dashboard .timeline-car-col small{display:block;color:var(--muted);font-size:9px}#dashboard .timeline-car-meta{display:flex;align-items:center;gap:7px;white-space:nowrap}#dashboard .timeline-car-owner{font-size:9px;color:var(--gold);font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:100px}
 @media(max-width:900px){
  #dashboard .dashboard-fleet-layout{grid-template-columns:1fr}
@@ -1779,7 +1779,7 @@ main{padding-left:178px!important;padding-right:14px!important}
     </div>
     <div class="stat dashboard-customer-card" role="button" tabindex="0" aria-label="Buka pilihan menu pelanggan" onclick="toggleCustomerQuickActions()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCustomerQuickActions()}"><small>Total Pelanggan</small><strong id="sCust">0</strong></div>
   </div>
-  <div class="timeline-head"><h3 style="margin:0">Timeline Armada Terjadwal</h3><div class="field timeline-month-field"><label for="fleetTimelineMonth">Bulan</label><input id="fleetTimelineMonth" type="month" onchange="render()"></div></div>
+  <div class="timeline-head"><h3 style="margin:0">Timeline Armada Terjadwal</h3><div class="field timeline-month-field"><label for="fleetTimelineMonth">Bulan</label><input id="fleetTimelineMonth" type="month" onchange="const wrap=this.closest('.card')?.querySelector('.tablewrap');if(wrap)wrap.scrollLeft=0;render()"></div></div>
   <details class="fleet-return-warning" id="fleetReturnWarning">
     <summary><span>⚠ Armada Pulang</span><strong id="fleetReturnCount">0 booking</strong></summary>
     <div id="fleetReturnRows" class="fleet-return-rows"></div>
@@ -3934,9 +3934,13 @@ if($('fleetTimelineMonth')){
    const car=db.cars.find(c=>String(c.id)===carId);
    const start=String(u.start||b.start||'').slice(0,10);
    const end=String(u.end||b.end||'').slice(0,10);
-   if(!car||!start||!end||end<selectedMonth+'-01'||start>selectedMonth+'-'+String(daysInMonth).padStart(2,'0'))return;
-   const from=Math.max(1,Number(start.slice(8,10)));
-   const to=Math.min(daysInMonth,Number(end.slice(8,10)));
+   const monthStart=selectedMonth+'-01';
+   const monthEnd=selectedMonth+'-'+String(daysInMonth).padStart(2,'0');
+   if(!car||!start||!end||end<monthStart||start>monthEnd)return;
+   const clampedStart=start<monthStart?monthStart:start;
+   const clampedEnd=end>monthEnd?monthEnd:end;
+   const from=Math.max(1,Number(clampedStart.slice(8,10)));
+   const to=Math.min(daysInMonth,Math.max(from,Number(clampedEnd.slice(8,10))));
    scheduled.push({car,booking:b,unit:i+1,start,end,from,to});
  }));
  const nowLocal=new Date();
